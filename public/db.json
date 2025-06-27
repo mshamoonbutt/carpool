@@ -1,0 +1,34 @@
+{
+    "users": [
+      {
+        "id": "u1",
+        "email": "student1@formanite.fccollege.edu.pk",
+        "password": "temp123",
+        "name": "Ali Khan",
+        "role": "driver",
+        "major": "Computer Science",
+        "year": 3,
+        "phone": "0300-1234567",
+        "ratings": {
+          "driver": { "average": 4.5, "count": 12 },
+          "rider": { "average": 4.8, "count": 5 }
+        }
+      },
+      {
+        "id": "u2",
+        "email": "student2@formanite.fccollege.edu.pk",
+        "password": "temp123",
+        "name": "Sara Ahmed",
+        "role": "rider",
+        "major": "Business",
+        "year": 2,
+        "phone": "0321-7654321",
+        "ratings": {
+          "driver": null,
+          "rider": { "average": 4.2, "count": 8 }
+        }
+      }
+    ],
+    "rides": [],
+    "bookings": []
+  }
