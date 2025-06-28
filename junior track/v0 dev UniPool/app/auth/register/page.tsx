@@ -96,10 +96,6 @@ export default function RegisterPage() {
 
     // Student-specific validation
     if (emailValidation.isValid && emailValidation.userType === 'student') {
-      if (!formData.major.trim()) {
-        setError('Major is required for students')
-        return false
-      }
       if (!formData.year) {
         setError('Year is required for students')
         return false
@@ -125,7 +121,7 @@ export default function RegisterPage() {
         email: formData.email,
         name: formData.name,
         role: formData.role as 'driver' | 'rider' | 'both',
-        major: formData.major,
+        major: "N/A", // Set to N/A as we're removing the major field
         year: formData.year,
         phone: formData.phone
       })
@@ -232,19 +228,6 @@ export default function RegisterPage() {
             {/* Student-specific fields */}
             {emailValidation?.userType === 'student' && (
               <>
-                <div className="space-y-2">
-                  <Label htmlFor="major">Major *</Label>
-                  <Input
-                    id="major"
-                    name="major"
-                    type="text"
-                    value={formData.major}
-                    onChange={handleInputChange}
-                    placeholder="e.g., Computer Science, BBA, etc."
-                    required
-                  />
-                </div>
-
                 <div className="space-y-2">
                   <Label htmlFor="year">Academic Year *</Label>
                   <Select value={formData.year} onValueChange={handleYearChange}>
