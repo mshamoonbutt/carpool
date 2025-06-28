@@ -1,0 +1,246 @@
+{
+  "users": [
+    {
+      "id": "u1",
+      "email": "ali.hassan@formanite.fccollege.edu.pk",
+      "name": "Ali Hassan",
+      "role": "driver",
+      "major": "CS",
+      "year": 3,
+      "phone": "0300-1234567",
+      "ratings": {
+        "driver": { "total": 45, "count": 10 },
+        "rider": { "total": 24, "count": 5 }
+      }
+    },
+    {
+      "id": "u2",
+      "email": "sara.khan@formanite.fccollege.edu.pk",
+      "name": "Sara Khan",
+      "role": "rider",
+      "major": "BBA",
+      "year": 2,
+      "phone": "0321-7654321",
+      "ratings": {
+        "driver": null,
+        "rider": { "total": 34, "count": 8 }
+      }
+    },
+    {
+      "id": "u3",
+      "email": "ahmad.raza@formanite.fccollege.edu.pk",
+      "name": "Ahmad Raza",
+      "role": "both",
+      "major": "Economics",
+      "year": 3,
+      "phone": "0333-9876543",
+      "ratings": {
+        "driver": { "total": 28, "count": 6 },
+        "rider": { "total": 18, "count": 4 }
+      }
+    },
+    {
+      "id": "u4",
+      "email": "ayesha.malik@formanite.fccollege.edu.pk",
+      "name": "Ayesha Malik",
+      "role": "rider",
+      "major": "Psychology",
+      "year": 2,
+      "phone": "0345-1234567",
+      "ratings": {
+        "driver": null,
+        "rider": { "total": 16, "count": 3 }
+      }
+    },
+    {
+      "id": "u5",
+      "email": "umar.khan@formanite.fccollege.edu.pk",
+      "name": "Umar Khan",
+      "role": "driver",
+      "major": "Engineering",
+      "year": 4,
+      "phone": "0312-9876543",
+      "ratings": {
+        "driver": { "total": 38, "count": 8 },
+        "rider": null
+      }
+    }
+  ],
+  "rides": [
+    {
+      "id": "r1",
+      "driverId": "u1",
+      "driverName": "Ali Hassan",
+      "pickup": "DHA Phase 5",
+      "dropoff": "FCC",
+      "departureTime": "2025-06-28T08:00:00",
+      "seats": 3,
+      "availableSeats": 2,
+      "route": ["DHA Phase 5", "DHA Phase 4", "Ferozepur Road", "FCC"],
+      "bookings": [
+        {
+          "riderId": "u2",
+          "riderName": "Sara Khan",
+          "pickupPoint": "DHA Phase 4",
+          "status": "confirmed"
+        }
+      ],
+      "recurring": {
+        "enabled": true,
+        "days": ["Mon", "Tue", "Wed", "Thu", "Fri"]
+      }
+    },
+    {
+      "id": "r2",
+      "driverId": "u3",
+      "driverName": "Ahmad Raza",
+      "pickup": "Johar Town",
+      "dropoff": "FCC",
+      "departureTime": "2025-06-28T09:30:00",
+      "seats": 4,
+      "availableSeats": 3,
+      "route": ["Johar Town", "Faisal Town", "Garden Town", "FCC"],
+      "bookings": [
+        {
+          "riderId": "u4",
+          "riderName": "Ayesha Malik",
+          "pickupPoint": "Garden Town",
+          "status": "confirmed"
+        }
+      ],
+      "recurring": {
+        "enabled": false
+      }
+    },
+    {
+      "id": "r3",
+      "driverId": "u5",
+      "driverName": "Umar Khan",
+      "pickup": "Model Town",
+      "dropoff": "FCC",
+      "departureTime": "2025-06-28T07:45:00",
+      "seats": 2,
+      "availableSeats": 2,
+      "route": ["Model Town", "Gulberg", "FCC"],
+      "bookings": [],
+      "recurring": {
+        "enabled": true,
+        "days": ["Mon", "Wed", "Fri"]
+      }
+    },
+    {
+      "id": "r4",
+      "driverId": "u1",
+      "driverName": "Ali Hassan",
+      "pickup": "DHA Phase 5",
+      "dropoff": "FCC",
+      "departureTime": "2025-06-28T16:30:00",
+      "seats": 3,
+      "availableSeats": 3,
+      "route": ["DHA Phase 5", "DHA Phase 4", "Ferozepur Road", "FCC"],
+      "bookings": [],
+      "recurring": {
+        "enabled": true,
+        "days": ["Mon", "Tue", "Wed", "Thu", "Fri"]
+      }
+    },
+    {
+      "id": "r5",
+      "driverId": "u3",
+      "driverName": "Ahmad Raza",
+      "pickup": "FCC",
+      "dropoff": "Johar Town",
+      "departureTime": "2025-06-28T17:00:00",
+      "seats": 4,
+      "availableSeats": 2,
+      "route": ["FCC", "Garden Town", "Faisal Town", "Johar Town"],
+      "bookings": [
+        {
+          "riderId": "u2",
+          "riderName": "Sara Khan",
+          "pickupPoint": "FCC",
+          "status": "confirmed"
+        },
+        {
+          "riderId": "u4",
+          "riderName": "Ayesha Malik",
+          "pickupPoint": "FCC",
+          "status": "confirmed"
+        }
+      ],
+      "recurring": {
+        "enabled": false
+      }
+    }
+  ],
+  "bookings": [
+    {
+      "id": "b1",
+      "rideId": "r1",
+      "riderId": "u2",
+      "driverId": "u1",
+      "status": "confirmed",
+      "pickupPoint": "DHA Phase 4",
+      "bookingTime": "2025-06-27T18:30:00"
+    },
+    {
+      "id": "b2",
+      "rideId": "r2",
+      "riderId": "u4",
+      "driverId": "u3",
+      "status": "confirmed",
+      "pickupPoint": "Garden Town",
+      "bookingTime": "2025-06-27T19:15:00"
+    },
+    {
+      "id": "b3",
+      "rideId": "r5",
+      "riderId": "u2",
+      "driverId": "u3",
+      "status": "confirmed",
+      "pickupPoint": "FCC",
+      "bookingTime": "2025-06-27T14:20:00"
+    },
+    {
+      "id": "b4",
+      "rideId": "r5",
+      "riderId": "u4",
+      "driverId": "u3",
+      "status": "confirmed",
+      "pickupPoint": "FCC",
+      "bookingTime": "2025-06-27T15:45:00"
+    }
+  ],
+  "ratings": [
+    {
+      "id": "rt1",
+      "rideId": "r1",
+      "raterId": "u2",
+      "ratedId": "u1",
+      "rating": 5,
+      "type": "driver",
+      "review": "Very punctual and friendly driver!",
+      "createdAt": "2025-06-26T10:30:00"
+    },
+    {
+      "id": "rt2",
+      "rideId": "r1",
+      "raterId": "u1",
+      "ratedId": "u2",
+      "rating": 4,
+      "type": "rider",
+      "review": "Good passenger, was on time.",
+      "createdAt": "2025-06-26T10:35:00"
+    },
+    {
+      "id": "rt3",
+      "rideId": "r2",
+      "raterId": "u4",
+      "ratedId": "u3",
+      "rating": 5,
+      "type": "driver",
+      "review": "Excellent driver, very safe!",
+      "createdAt": "2025-06-26T12:20:00"
+    }
+  ]
+}
