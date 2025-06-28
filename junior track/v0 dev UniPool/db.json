@@ -1,0 +1,181 @@
+{
+  "users": [
+    {
+      "id": "u1",
+      "email": "ahmed.hassan@formanite.fccollege.edu.pk",
+      "name": "Ahmed Hassan",
+      "role": "both",
+      "major": "Computer Science",
+      "year": 3,
+      "phone": "0300-1234567",
+      "userType": "student",
+      "ratings": {
+        "driver": { "total": 4.8, "count": 15 },
+        "rider": { "total": 4.6, "count": 8 }
+      },
+      "createdAt": "2024-12-01T10:00:00.000Z"
+    },
+    {
+      "id": "u2",
+      "email": "ali.raza@formanite.fccollege.edu.pk",
+      "name": "Ali Raza",
+      "role": "driver",
+      "major": "Business Administration",
+      "year": 4,
+      "phone": "0321-7654321",
+      "userType": "student",
+      "ratings": {
+        "driver": { "total": 4.9, "count": 22 },
+        "rider": null
+      },
+      "createdAt": "2024-11-15T09:30:00.000Z"
+    },
+    {
+      "id": "u3",
+      "email": "fatima.khan@formanite.fccollege.edu.pk",
+      "name": "Fatima Khan",
+      "role": "rider",
+      "major": "Psychology",
+      "year": 2,
+      "phone": "0333-9876543",
+      "userType": "student",
+      "ratings": {
+        "driver": null,
+        "rider": { "total": 4.6, "count": 8 }
+      },
+      "createdAt": "2024-11-20T14:15:00.000Z"
+    },
+    {
+      "id": "u4",
+      "email": "dr.tariq@fccollege.edu.pk",
+      "name": "Dr. Muhammad Tariq",
+      "role": "driver",
+      "major": "N/A",
+      "year": null,
+      "phone": "0300-1111222",
+      "userType": "faculty",
+      "ratings": {
+        "driver": { "total": 4.7, "count": 12 },
+        "rider": null
+      },
+      "createdAt": "2024-10-01T08:00:00.000Z"
+    },
+    {
+      "id": "u5",
+      "email": "sara.ahmed@formanite.fccollege.edu.pk",
+      "name": "Sara Ahmed",
+      "role": "both",
+      "major": "English Literature",
+      "year": 3,
+      "phone": "0345-5555666",
+      "userType": "student",
+      "ratings": {
+        "driver": { "total": 4.5, "count": 6 },
+        "rider": { "total": 4.8, "count": 12 }
+      },
+      "createdAt": "2024-11-10T16:45:00.000Z"
+    },
+    {
+      "id": "u6",
+      "email": "hassan.malik@formanite.fccollege.edu.pk",
+      "name": "Hassan Malik",
+      "role": "rider",
+      "major": "Economics",
+      "year": 1,
+      "phone": "0302-7777888",
+      "userType": "student",
+      "ratings": {
+        "driver": null,
+        "rider": { "total": 4.3, "count": 5 }
+      },
+      "createdAt": "2024-12-15T11:20:00.000Z"
+    }
+  ],
+  "rides": [
+    {
+      "id": "r1",
+      "driverId": "u1",
+      "driverName": "Ahmed Hassan",
+      "pickup": "DHA Phase 5",
+      "dropoff": "FCC",
+      "departureTime": "2025-06-28T08:00:00",
+      "seats": 3,
+      "availableSeats": 2,
+      "route": ["DHA Phase 5", "DHA Phase 4", "Main Boulevard", "FCC"],
+      "bookings": [
+        {
+          "riderId": "u3",
+          "riderName": "Fatima Khan",
+          "pickupPoint": "DHA Phase 4",
+          "status": "confirmed"
+        }
+      ],
+      "recurring": {
+        "enabled": true,
+        "days": ["Mon", "Tue", "Wed", "Thu", "Fri"]
+      },
+      "createdAt": "2025-06-27T18:30:00"
+    },
+    {
+      "id": "r2",
+      "driverId": "u2",
+      "driverName": "Ali Raza",
+      "pickup": "Gulberg",
+      "dropoff": "FCC",
+      "departureTime": "2025-06-28T07:45:00",
+      "seats": 4,
+      "availableSeats": 3,
+      "route": ["Gulberg", "Liberty", "Jail Road", "FCC"],
+      "bookings": [
+        {
+          "riderId": "u6",
+          "riderName": "Hassan Malik",
+          "pickupPoint": "Liberty",
+          "status": "confirmed"
+        }
+      ],
+      "recurring": {
+        "enabled": true,
+        "days": ["Mon", "Wed", "Fri"]
+      },
+      "createdAt": "2025-06-26T20:15:00"
+    },
+    {
+      "id": "r3",
+      "driverId": "u4",
+      "driverName": "Dr. Muhammad Tariq",
+      "pickup": "Model Town",
+      "dropoff": "FCC",
+      "departureTime": "2025-06-28T08:30:00",
+      "seats": 2,
+      "availableSeats": 2,
+      "route": ["Model Town", "Garden Town", "Ferozepur Road", "FCC"],
+      "bookings": [],
+      "recurring": {
+        "enabled": true,
+        "days": ["Tue", "Thu"]
+      },
+      "createdAt": "2025-06-25T15:45:00"
+    }
+  ],
+  "bookings": [
+    {
+      "id": "b1",
+      "rideId": "r1",
+      "riderId": "u3",
+      "driverId": "u1",
+      "status": "confirmed",
+      "pickupPoint": "DHA Phase 4",
+      "bookingTime": "2025-06-27T18:30:00"
+    },
+    {
+      "id": "b2",
+      "rideId": "r2",
+      "riderId": "u6",
+      "driverId": "u2",
+      "status": "confirmed",
+      "pickupPoint": "Liberty",
+      "bookingTime": "2025-06-26T21:00:00"
+    }
+  ]
+}

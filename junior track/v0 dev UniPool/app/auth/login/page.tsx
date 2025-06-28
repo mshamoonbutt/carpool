@@ -1,0 +1,193 @@
+"use client"
+
+import { useState } from "react"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { CheckCircle, AlertCircle } from "lucide-react"
+import { AuthService } from "@/services/AuthService"
+
+export default function LoginPage() {
+  const [email, setEmail] = useState("")
+  const [error, setError] = useState("")
+  const [success, setSuccess] = useState("")
+  const [loading, setLoading] = useState(false)
+  const [emailValidation, setEmailValidation] = useState<{
+    isValid: boolean;
+    userType: 'student' | 'faculty' | null;
+    error: string | null;
+  } | null>(null)
+
+  const router = useRouter()
+
+  // Handle email input change with real-time validation
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const emailValue = e.target.value
+    setEmail(emailValue)
+    setError("") // Clear previous errors
+    
+    // Validate email in real-time
+    if (emailValue.trim()) {
+      const validation = AuthService.validateEmail(emailValue)
+      setEmailValidation(validation)
+    } else {
+      setEmailValidation(null)
+    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    // Validate email before submitting
+    const emailValidation = AuthService.validateEmail(email)
+    if (!emailValidation.isValid) {
+      setError(emailValidation.error || 'Invalid email')
+      return
+    }
+
+    setLoading(true)
+    setError("")
+    setSuccess("")
+
+    try {
+      const user = await AuthService.login(email)
+      if (user) {
+        setSuccess("Login successful! Redirecting to dashboard...")
+        setTimeout(() => {
+          router.push("/dashboard")
+        }, 1500)
+      }
+    } catch (err: any) {
+      setError(err.message || "Login failed. Please try again.")
+    }
+
+    setLoading(false)
+  }
+
+  // Quick login helper for demo
+  const quickLogin = (demoEmail: string) => {
+    setEmail(demoEmail)
+    const validation = AuthService.validateEmail(demoEmail)
+    setEmailValidation(validation)
+    setError("")
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <Card className="w-full max-w-md">
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-2xl font-bold text-center">Welcome Back to UniPool</CardTitle>
+          <CardDescription className="text-center">
+            Sign in to your FCC account
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Email Field with Real-time Validation */}
+            <div className="space-y-2">
+              <Label htmlFor="email">FCC Email Address</Label>
+              <div className="relative">
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={handleEmailChange}
+                  className={`${
+                    emailValidation?.isValid 
+                      ? 'border-green-500 focus:ring-green-500' 
+                      : emailValidation?.error 
+                        ? 'border-red-500 focus:ring-red-500'
+                        : ''
+                  }`}
+                  placeholder="your.name@formanite.fccollege.edu.pk"
+                  required
+                />
+                {emailValidation?.isValid && (
+                  <CheckCircle className="absolute right-3 top-3 h-4 w-4 text-green-500" />
+                )}
+                {emailValidation?.error && (
+                  <AlertCircle className="absolute right-3 top-3 h-4 w-4 text-red-500" />
+                )}
+              </div>
+              
+              {/* Email Validation Feedback */}
+              {emailValidation?.isValid && (
+                <div className="text-sm text-green-600 flex items-center">
+                  <CheckCircle className="w-4 h-4 mr-1" />
+                  Valid {emailValidation.userType === 'student' ? 'student' : 'faculty/staff'} email
+                </div>
+              )}
+              
+              {emailValidation?.error && (
+                <p className="text-sm text-red-600">{emailValidation.error}</p>
+              )}
+              
+              {/* Email Domain Help Text */}
+              <p className="text-xs text-gray-500">
+                Use @formanite.fccollege.edu.pk for students or @fccollege.edu.pk for faculty/staff
+              </p>
+            </div>
+
+            {/* Error Display */}
+            {error && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+
+            {/* Success Display */}
+            {success && (
+              <Alert className="border-green-200 bg-green-50">
+                <CheckCircle className="h-4 w-4 text-green-600" />
+                <AlertDescription className="text-green-700">{success}</AlertDescription>
+              </Alert>
+            )}
+
+            {/* Submit Button */}
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={loading || !emailValidation?.isValid}
+            >
+              {loading ? "Signing In..." : "Sign In"}
+            </Button>
+          </form>
+
+          {/* Quick Login for Demo */}
+          <div className="mt-6 p-3 bg-blue-50 border border-blue-200 rounded-md">
+            <p className="text-sm text-blue-700 font-medium mb-2">Quick Demo Login:</p>
+            <div className="space-y-1 text-xs">
+              <button
+                type="button"
+                onClick={() => quickLogin('ahmed.hassan@formanite.fccollege.edu.pk')}
+                className="block w-full text-left text-blue-600 hover:text-blue-800 hover:underline"
+              >
+                • ahmed.hassan@formanite.fccollege.edu.pk (Student)
+              </button>
+              <button
+                type="button"
+                onClick={() => quickLogin('dr.tariq@fccollege.edu.pk')}
+                className="block w-full text-left text-blue-600 hover:text-blue-800 hover:underline"
+              >
+                • dr.tariq@fccollege.edu.pk (Faculty)
+              </button>
+            </div>
+          </div>
+
+          {/* Switch to Register */}
+          <div className="mt-6 text-center text-sm">
+            <span className="text-gray-600">Don't have an account? </span>
+            <Link href="/auth/register" className="font-medium text-black hover:underline">
+              Create one here
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
