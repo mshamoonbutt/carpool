@@ -23,8 +23,7 @@ export default function LoginBox() {
       const user = await AuthService.login(email, password);
       setSuccess('Login successful! Redirecting...');
       
-      // Store user and redirect
-      localStorage.setItem('currentUser', JSON.stringify(user));
+      // AuthService.login already stores the user, no need to store again
       setTimeout(() => navigate('/dashboard'), 500);
       
     } catch (err) {

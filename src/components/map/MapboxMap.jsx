@@ -14,34 +14,26 @@ const MapboxMap = ({
   },
   markers = [],
   route = null,
+  currentLocation = null,
+  driverLocation = null,
   onMapLoad,
   interactive = true,
   className = ''
 }) => {
   const mapContainer = useRef(null);
   const [map, setMap] = useState(null);
-  const [mapMarkers, setMapMarkers] = useState([]);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [routeSourceId, setRouteSourceId] = useState(null);
+  const [markerElements, setMarkerElements] = useState([]);
 
   // Initialize map
   useEffect(() => {
     console.log('MapboxMap: Component mounted');
-    console.log('MapboxMap: Access token:', mapboxgl.accessToken);
     
     if (!mapContainer.current) {
       console.error('MapboxMap: No container ref');
       setError('No container element found');
-      return;
-    }
-
-    // Check if container has dimensions
-    const rect = mapContainer.current.getBoundingClientRect();
-    console.log('MapboxMap: Container rect:', rect);
-    
-    if (rect.width === 0 || rect.height === 0) {
-      console.error('MapboxMap: Container has no dimensions');
-      setError('Container has no dimensions');
       return;
     }
 
@@ -60,7 +52,6 @@ const MapboxMap = ({
 
       // Add controls
       newMap.addControl(new mapboxgl.NavigationControl(), 'top-right');
-      newMap.addControl(new mapboxgl.ScaleControl(), 'bottom-left');
 
       // Handle map load
       newMap.on('load', () => {
@@ -75,11 +66,6 @@ const MapboxMap = ({
         console.error('MapboxMap: Map error:', e);
         setError(e.error || 'Map failed to load');
         setLoading(false);
-      });
-
-      // Handle map render
-      newMap.on('render', () => {
-        console.log('MapboxMap: Map rendering');
       });
 
       // Cleanup
@@ -98,55 +84,26 @@ const MapboxMap = ({
     }
   }, []);
 
-  // Update markers when changed
-  useEffect(() => {
-    if (!map) return;
-
-    console.log('MapboxMap: Updating markers:', markers);
-
-    // Clear existing markers
-    mapMarkers.forEach(marker => marker.remove());
-    const newMarkers = [];
-
-    // Add new markers
-    markers.forEach(marker => {
-      if (!marker.position) return;
-
-      const popup = marker.content 
-        ? new mapboxgl.Popup().setHTML(marker.content)
-        : undefined;
-
-      const newMarker = new mapboxgl.Marker({
-        color: marker.color || '#3b82f6'
-      })
-        .setLngLat(marker.position)
-        .setPopup(popup)
-        .addTo(map);
-
-      if (marker.autoOpenPopup) {
-        newMarker.togglePopup();
-      }
-
-      newMarkers.push(newMarker);
-    });
-
-    setMapMarkers(newMarkers);
-  }, [map, markers]);
-
   // Handle route display
   useEffect(() => {
     if (!map || !route) return;
 
-    console.log('MapboxMap: Displaying route:', route);
+    console.log('MapboxMap: Adding route to map:', route);
 
-    // Remove existing route layer if any
-    if (map.getSource('route')) {
-      map.removeLayer('route-layer');
-      map.removeSource('route');
+    // Remove existing route if any
+    if (routeSourceId) {
+      if (map.getSource(routeSourceId)) {
+        map.removeLayer(`${routeSourceId}-layer`);
+        map.removeSource(routeSourceId);
+      }
     }
 
-    // Add route line
-    map.addSource('route', {
+    // Create unique source ID
+    const sourceId = `route-${Date.now()}`;
+    setRouteSourceId(sourceId);
+
+    // Add route source
+    map.addSource(sourceId, {
       type: 'geojson',
       data: {
         type: 'Feature',
@@ -158,52 +115,126 @@ const MapboxMap = ({
       }
     });
 
+    // Add route layer
     map.addLayer({
-      id: 'route-layer',
+      id: `${sourceId}-layer`,
       type: 'line',
-      source: 'route',
+      source: sourceId,
       layout: {
         'line-join': 'round',
         'line-cap': 'round'
       },
       paint: {
-        'line-color': '#3b82f6',
+        'line-color': '#3B82F6',
         'line-width': 4,
         'line-opacity': 0.8
       }
     });
 
-    // Add origin and destination markers if coordinates are provided
-    if (route.originCoords && route.destCoords) {
-      // Origin marker (green)
-      const originMarker = new mapboxgl.Marker({
-        color: '#10b981'
-      })
-        .setLngLat(route.originCoords)
-        .setPopup(new mapboxgl.Popup().setHTML(`<div class="text-green-600 font-medium">Origin</div><div class="text-sm">${route.origin}</div>`))
-        .addTo(map);
-
-      // Destination marker (red)
-      const destMarker = new mapboxgl.Marker({
-        color: '#ef4444'
-      })
-        .setLngLat(route.destCoords)
-        .setPopup(new mapboxgl.Popup().setHTML(`<div class="text-red-600 font-medium">Destination</div><div class="text-sm">${route.destination}</div>`))
-        .addTo(map);
-
-      // Add to markers array for cleanup
-      setMapMarkers(prev => [...prev, originMarker, destMarker]);
+    // Fit map to route bounds
+    if (route.coordinates.length > 0) {
+      const bounds = new mapboxgl.LngLatBounds();
+      route.coordinates.forEach(coord => {
+        bounds.extend(coord);
+      });
+      map.fitBounds(bounds, {
+        padding: 50,
+        duration: 1000
+      });
     }
 
-    // Fit map to route bounds
-    const bounds = new mapboxgl.LngLatBounds();
-    route.coordinates.forEach(coord => bounds.extend(coord));
-    map.fitBounds(bounds, {
-      padding: 50,
-      maxZoom: 15
+    // Cleanup function
+    return () => {
+      if (map && map.getSource(sourceId)) {
+        if (map.getLayer(`${sourceId}-layer`)) {
+          map.removeLayer(`${sourceId}-layer`);
+        }
+        map.removeSource(sourceId);
+      }
+    };
+  }, [map, route]);
+
+  // Handle markers
+  useEffect(() => {
+    if (!map) return;
+
+    // Remove existing markers
+    markerElements.forEach(marker => marker.remove());
+    setMarkerElements([]);
+
+    // Add new markers
+    const newMarkers = markers.map((marker, index) => {
+      const el = document.createElement('div');
+      el.className = 'marker';
+      el.style.backgroundColor = marker.color || '#3B82F6';
+      el.style.width = '20px';
+      el.style.height = '20px';
+      el.style.borderRadius = '50%';
+      el.style.border = '2px solid white';
+      el.style.cursor = 'pointer';
+      el.title = marker.title || `Marker ${index + 1}`;
+
+      const mapboxMarker = new mapboxgl.Marker(el)
+        .setLngLat(marker.coordinates)
+        .addTo(map);
+
+      return mapboxMarker;
     });
 
-  }, [map, route]);
+    setMarkerElements(newMarkers);
+
+    // Cleanup
+    return () => {
+      newMarkers.forEach(marker => marker.remove());
+    };
+  }, [map, markers]);
+
+  // Handle current location marker
+  useEffect(() => {
+    if (!map || !currentLocation) return;
+
+    console.log('MapboxMap: Adding current location marker:', currentLocation);
+
+    const el = document.createElement('div');
+    el.className = 'current-location-marker';
+    el.style.backgroundColor = '#10B981';
+    el.style.width = '16px';
+    el.style.height = '16px';
+    el.style.borderRadius = '50%';
+    el.style.border = '3px solid white';
+    el.style.boxShadow = '0 0 0 2px #10B981';
+
+    const marker = new mapboxgl.Marker(el)
+      .setLngLat([currentLocation.lng, currentLocation.lat])
+      .addTo(map);
+
+    console.log('MapboxMap: Current location marker added at:', [currentLocation.lng, currentLocation.lat]);
+
+    return () => {
+      console.log('MapboxMap: Removing current location marker');
+      marker.remove();
+    };
+  }, [map, currentLocation]);
+
+  // Handle driver location marker
+  useEffect(() => {
+    if (!map || !driverLocation) return;
+
+    const el = document.createElement('div');
+    el.className = 'driver-location-marker';
+    el.style.backgroundColor = '#F59E0B';
+    el.style.width = '18px';
+    el.style.height = '18px';
+    el.style.borderRadius = '50%';
+    el.style.border = '3px solid white';
+    el.style.boxShadow = '0 0 0 2px #F59E0B';
+
+    const marker = new mapboxgl.Marker(el)
+      .setLngLat([driverLocation.lng, driverLocation.lat])
+      .addTo(map);
+
+    return () => marker.remove();
+  }, [map, driverLocation]);
 
   if (error) {
     return (
@@ -212,7 +243,6 @@ const MapboxMap = ({
           <div>
             <h3 className="font-bold">Map Error</h3>
             <p>{error}</p>
-            <p className="text-sm mt-2">Token: {mapboxgl.accessToken.substring(0, 20)}...</p>
           </div>
         </div>
       </div>
@@ -225,11 +255,6 @@ const MapboxMap = ({
       {loading && (
         <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
           <div className="text-gray-600">Loading map...</div>
-        </div>
-      )}
-      {!loading && !map && (
-        <div className="absolute inset-0 flex items-center justify-center bg-yellow-100">
-          <div className="text-yellow-800">Map not loaded</div>
         </div>
       )}
     </div>

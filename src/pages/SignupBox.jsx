@@ -1,6 +1,8 @@
 // src/pages/SignupBox.jsx
 
 import React, { useState } from "react";
+import { motion } from 'framer-motion';
+import { Eye, EyeOff } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import DataService from '../services/DataService';
 
@@ -8,7 +10,9 @@ const SignupBox = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -16,6 +20,7 @@ const SignupBox = () => {
     e.preventDefault();
     setLoading(true);
     setError("");
+    setSuccess("");
 
     try {
       // Validate email domain
@@ -35,17 +40,16 @@ const SignupBox = () => {
         email,
         password,
         name,
-        role: 'rider',
-        major: 'Computer Science',
-        year: 1,
-        phone: '',
+        type: 'student',
         ratings: {
-          driver: null,
+          driver: { average: 0, count: 0 },
           rider: { average: 0, count: 0 }
         }
       };
 
       DataService.addUser(newUser);
+      
+      setSuccess('Account created successfully! Redirecting...');
       
       // Store current user and redirect
       localStorage.setItem('currentUser', JSON.stringify(newUser));
@@ -59,79 +63,130 @@ const SignupBox = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-100 to-blue-100 px-4">
-      <div className="bg-white shadow-xl rounded-2xl p-8 w-full max-w-md">
-        <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">Create Your Account</h2>
+    <div className="min-h-screen bg-gradient-to-br from-[#0B1120] via-[#1E293B] to-[#0B1120] flex items-center justify-center p-4">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9, y: 50 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.8, ease: 'easeOut' }}
+        className="bg-[#0F172A] bg-opacity-90 backdrop-blur-lg p-8 sm:p-10 rounded-3xl shadow-2xl w-full max-w-md"
+      >
+        <motion.h1 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="text-3xl sm:text-4xl font-extrabold text-center text-cyan-400 mb-2"
+        >
+          Join UniPool 🚗
+        </motion.h1>
+        
+        <motion.p 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+          className="text-center text-slate-400 text-sm mb-8"
+        >
+          Create your account and start sharing rides
+        </motion.p>
 
         <form onSubmit={handleSignup} className="space-y-5">
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-              Full Name
-            </label>
             <input
-              id="name"
               type="text"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Your full name"
               value={name}
               onChange={(e) => setName(e.target.value)}
+              placeholder="Your full name"
+              className={`w-full px-4 py-3 rounded-full bg-[#1E293B] text-white placeholder-slate-500 focus:outline-none focus:ring-4 ${
+                error ? 'focus:ring-red-500' : 'focus:ring-cyan-400'
+              } transition duration-300`}
               required
+              autoComplete="name"
             />
           </div>
 
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-              Email Address
-            </label>
             <input
-              id="email"
               type="email"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="you@formanite.fccollege.edu.pk"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              placeholder="yourname@formanite.fccollege.edu.pk"
+              className={`w-full px-4 py-3 rounded-full bg-[#1E293B] text-white placeholder-slate-500 focus:outline-none focus:ring-4 ${
+                error ? 'focus:ring-red-500' : 'focus:ring-cyan-400'
+              } transition duration-300`}
               required
+              autoComplete="username"
             />
           </div>
 
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-              Password
-            </label>
+          <div className="relative">
             <input
-              id="password"
-              type="password"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="••••••••"
+              type={showPassword ? 'text' : 'password'}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter your password"
+              className="w-full px-4 py-3 rounded-full bg-[#1E293B] text-white placeholder-slate-500 focus:outline-none focus:ring-4 focus:ring-cyan-400 transition duration-300"
               required
+              autoComplete="new-password"
             />
+            <button
+              type="button"
+              className="absolute top-1/2 right-4 transform -translate-y-1/2 text-cyan-400 hover:text-cyan-300"
+              onClick={() => setShowPassword((prev) => !prev)}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+            >
+              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+            </button>
           </div>
 
           {error && (
-            <p className="text-red-500 text-sm text-center">{error}</p>
+            <motion.p 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-red-400 text-sm text-center"
+            >
+              {error}
+            </motion.p>
+          )}
+          
+          {success && (
+            <motion.p 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-green-400 text-sm text-center"
+            >
+              {success}
+            </motion.p>
           )}
 
-          <button
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             type="submit"
             disabled={loading}
-            className="w-full py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition duration-200 disabled:opacity-70"
+            className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white py-3 rounded-full transition-all duration-300 flex justify-center items-center shadow-lg disabled:opacity-70"
           >
-            {loading ? 'Creating Account...' : 'Sign Up'}
-          </button>
+            {loading ? (
+              <div className="w-5 h-5 border-2 border-white border-t-transparent animate-spin rounded-full"></div>
+            ) : (
+              'Create Account'
+            )}
+          </motion.button>
         </form>
 
-        <p className="text-center text-sm text-gray-600 mt-6">
+        <motion.p 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.7 }}
+          className="text-center text-sm text-slate-400 mt-6"
+        >
           Already have an account?{' '}
           <button 
             onClick={() => navigate('/login')}
-            className="text-blue-600 hover:underline font-medium focus:outline-none"
+            className="text-cyan-400 hover:underline font-medium focus:outline-none"
           >
             Login here
           </button>
-        </p>
-      </div>
+        </motion.p>
+      </motion.div>
     </div>
   );
 };
