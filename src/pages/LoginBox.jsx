@@ -23,10 +23,20 @@ export default function LoginBox() {
       const user = await AuthService.login(email, password);
       setSuccess('Login successful! Redirecting...');
       
-      // AuthService.login already stores the user, no need to store again
-      setTimeout(() => navigate('/dashboard'), 500);
+      // AuthService.login already stores the user, now trigger auth change
+      console.log('✅ Login successful, triggering auth change...');
+      
+      // Trigger custom event to notify App.jsx
+      window.dispatchEvent(new Event('authChange'));
+      
+      // Use a more direct approach - reload the page to the dashboard
+      setTimeout(() => {
+        console.log('🔄 Redirecting to dashboard...');
+        window.location.href = '/dashboard';
+      }, 1000);
       
     } catch (err) {
+      console.error('❌ Login error:', err);
       setError(err.message || 'Login failed. Please try again.');
     } finally {
       setLoading(false);
@@ -59,7 +69,7 @@ export default function LoginBox() {
           Smarter campus commuting. Share, save, connect.
         </motion.p>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <input
               type="email"
@@ -119,7 +129,7 @@ export default function LoginBox() {
             whileTap={{ scale: 0.95 }}
             type="submit"
             disabled={loading}
-            className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white py-3 rounded-full transition-all duration-300 flex justify-center items-center shadow-lg disabled:opacity-70"
+            className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white py-4 rounded-full transition-all duration-300 flex justify-center items-center shadow-lg disabled:opacity-70 text-lg font-semibold"
           >
             {loading ? (
               <div className="w-5 h-5 border-2 border-white border-t-transparent animate-spin rounded-full"></div>
@@ -133,7 +143,7 @@ export default function LoginBox() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.7 }}
-          className="text-center text-sm text-slate-400 mt-6"
+          className="text-center text-sm text-slate-400 mt-8"
         >
           Don't have an account?{' '}
           <button 

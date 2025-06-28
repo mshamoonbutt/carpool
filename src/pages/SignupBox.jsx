@@ -53,7 +53,13 @@ const SignupBox = () => {
       
       // Store current user and redirect
       localStorage.setItem('currentUser', JSON.stringify(newUser));
-      setTimeout(() => navigate('/dashboard'), 1000);
+      
+      // Trigger custom event to notify App.jsx
+      window.dispatchEvent(new Event('authChange'));
+      
+      setTimeout(() => {
+        window.location.href = '/dashboard';
+      }, 1000);
       
     } catch (err) {
       setError(err.message || 'Signup failed. Please try again.');
@@ -88,7 +94,7 @@ const SignupBox = () => {
           Create your account and start sharing rides
         </motion.p>
 
-        <form onSubmit={handleSignup} className="space-y-5">
+        <form onSubmit={handleSignup} className="space-y-6">
           <div>
             <input
               type="text"
@@ -162,7 +168,7 @@ const SignupBox = () => {
             whileTap={{ scale: 0.95 }}
             type="submit"
             disabled={loading}
-            className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white py-3 rounded-full transition-all duration-300 flex justify-center items-center shadow-lg disabled:opacity-70"
+            className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white py-4 rounded-full transition-all duration-300 flex justify-center items-center shadow-lg disabled:opacity-70 text-lg font-semibold"
           >
             {loading ? (
               <div className="w-5 h-5 border-2 border-white border-t-transparent animate-spin rounded-full"></div>
@@ -176,7 +182,7 @@ const SignupBox = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.7 }}
-          className="text-center text-sm text-slate-400 mt-6"
+          className="text-center text-sm text-slate-400 mt-8"
         >
           Already have an account?{' '}
           <button 

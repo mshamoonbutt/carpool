@@ -45,9 +45,14 @@ export default function Dashboard() {
   useEffect(() => {
     // Check authentication
     const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+    console.log('🔍 Dashboard: Checking authentication...');
+    console.log('Dashboard: Current user from localStorage:', currentUser);
+    
     if (!currentUser) {
+      console.log('❌ Dashboard: No user found, redirecting to login');
       navigate('/login');
     } else {
+      console.log('✅ Dashboard: User authenticated:', currentUser.name);
       setUser(currentUser);
     }
 

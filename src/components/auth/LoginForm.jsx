@@ -1,149 +1,104 @@
-// components/auth/LoginForm.js
-import React, { useState } from 'react';
+// src/components/auth/LoginForm.jsx
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AuthAPI } from '../../contracts/AuthAPI';
-import Input from '../ui/Input';
-import Button from '../ui/Button';
-import Notification from '../shared/Notification';
-import './LoginForm.css'; // Component-specific styles
+import AuthAPI from '../../services/AuthService';
 
-const LoginForm = ({ onSuccess }) => {
+const LoginForm = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    email: '',
-    password: ''
-  });
-  const [errors, setErrors] = useState({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [notification, setNotification] = useState(null);
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-    // Clear error when user types
-    if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
-    }
-  };
-
-  const validateForm = () => {
-    const newErrors = {};
-    if (!formData.email) newErrors.email = 'Email is required';
-    if (!formData.password) newErrors.password = 'Password is required';
-    
-    // Basic email format validation
-    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email';
-    }
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!validateForm()) return;
-    
-    setIsSubmitting(true);
-    setNotification(null);
+    setLoading(true);
+    setError('');
     
     try {
-      // Call the AuthAPI login method
-      const user = await AuthAPI.login(formData.email, formData.password);
+      console.log('🔐 LoginForm: Starting login process...');
+      const user = await AuthAPI.login(email, password);
+      console.log('✅ LoginForm: Login successful, user:', user.name);
       
-      // Show success notification
-      setNotification({
-        type: 'success',
-        message: `Welcome back, ${user.name}!`
-      });
+      // Dispatch custom event for App.jsx to detect
+      window.dispatchEvent(new CustomEvent('userLoggedIn', { detail: user }));
       
-      // Call optional onSuccess callback if provided
-      if (onSuccess) {
-        onSuccess(user);
-      }
-      
-      // Redirect to dashboard after 1 second
-      setTimeout(() => navigate('/dashboard'), 1000);
-      
-    } catch (error) {
-      setNotification({
-        type: 'error',
-        message: error.message || 'Login failed. Please try again.'
-      });
+      console.log('🔄 LoginForm: Navigating to dashboard...');
+      navigate('/dashboard'); // Redirect to dashboard on success
+    } catch (err) {
+      console.error('❌ LoginForm: Login failed:', err.message);
+      setError(err.message);
     } finally {
-      setIsSubmitting(false);
+      setLoading(false);
     }
   };
 
   return (
-    <div className="login-form-container">
-      <h2>Login to UniPool</h2>
-      
-      {notification && (
-        <Notification 
-          type={notification.type}
-          message={notification.message}
-          onClose={() => setNotification(null)}
-        />
-      )}
-      
-      <form onSubmit={handleSubmit} className="login-form">
-        <Input
-          label="University Email"
-          type="email"
-          name="email"
-          value={formData.email}
-          onChange={handleChange}
-          error={errors.email}
-          placeholder="your.email@formanite.fccollege.edu.pk"
-          required
-        />
+    <div className="min-h-screen bg-gradient-to-br from-[#0B1120] via-[#1E293B] to-[#0B1120] flex items-center justify-center p-4">
+      <div className="bg-[#0F172A] bg-opacity-90 backdrop-blur-lg p-8 sm:p-10 rounded-3xl shadow-2xl w-full max-w-md">
+        <h1 className="text-3xl sm:text-4xl font-extrabold text-center text-cyan-400 mb-2">
+          Login to UniPool 🚗
+        </h1>
         
-        <Input
-          label="Password"
-          type="password"
-          name="password"
-          value={formData.password}
-          onChange={handleChange}
-          error={errors.password}
-          placeholder="Enter your password"
-          required
-        />
-        
-        <div className="form-actions">
-          <Button 
-            type="submit" 
-            disabled={isSubmitting}
-            className="login-button"
-          >
-            {isSubmitting ? 'Logging in...' : 'Login'}
-          </Button>
+        <p className="text-center text-slate-400 text-sm mb-8">
+          Welcome back! Sign in to your account
+        </p>
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {error && (
+            <div className="text-red-400 text-sm text-center bg-red-900 bg-opacity-20 p-3 rounded-lg">
+              {error}
+            </div>
+          )}
           
-          <div className="form-links">
+          <div>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="yourname@formanite.fccollege.edu.pk"
+              className="w-full px-4 py-3 rounded-full bg-[#1E293B] text-white placeholder-slate-500 focus:outline-none focus:ring-4 focus:ring-cyan-400 transition duration-300"
+              required
+              autoComplete="username"
+            />
+          </div>
+          
+          <div>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Password"
+              className="w-full px-4 py-3 rounded-full bg-[#1E293B] text-white placeholder-slate-500 focus:outline-none focus:ring-4 focus:ring-cyan-400 transition duration-300"
+              required
+              autoComplete="current-password"
+            />
+          </div>
+          
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white py-4 rounded-full transition-all duration-300 flex justify-center items-center shadow-lg disabled:opacity-70 text-lg font-semibold"
+          >
+            {loading ? (
+              <div className="w-5 h-5 border-2 border-white border-t-transparent animate-spin rounded-full"></div>
+            ) : (
+              'Login'
+            )}
+          </button>
+          
+          <div className="text-center text-sm text-slate-400 mt-8">
+            <span>Don't have an account? </span>
             <button 
               type="button" 
-              className="text-button"
-              onClick={() => navigate('/register')}
+              onClick={() => navigate('/signup')}
+              className="text-cyan-400 hover:underline font-medium focus:outline-none"
             >
-              Don't have an account? Register
-            </button>
-            <button 
-              type="button" 
-              className="text-button"
-              onClick={() => setNotification({
-                type: 'info',
-                message: 'Please contact campus IT to reset your password'
-              })}
-            >
-              Forgot password?
+              Sign up
             </button>
           </div>
-        </div>
-      </form>
+        </form>
+      </div>
     </div>
   );
 };
