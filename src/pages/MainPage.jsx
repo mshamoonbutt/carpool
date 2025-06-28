@@ -136,6 +136,13 @@ export default function MainPage() {
         >
           🧪 Test AuthService
         </button>
+
+        <button 
+          onClick={() => navigate('/test')}
+          className="w-full bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white py-3 rounded-full shadow-lg transition transform hover:scale-105 text-sm"
+        >
+          🎨 Test GUI Styling
+        </button>
       </motion.div>
     </div>
   );

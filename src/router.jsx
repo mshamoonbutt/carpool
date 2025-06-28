@@ -3,6 +3,7 @@ import MainPage from './pages/MainPage.jsx';
 import LoginBox from './pages/LoginBox.jsx';
 import SignupBox from './pages/SignupBox.jsx';
 import Dashboard from './pages/Dashboard.jsx';
+import TestPage from './pages/TestPage.jsx';
 
 // Error component for router
 const ErrorPage = () => (
@@ -39,6 +40,11 @@ export const router = createBrowserRouter([
   {
     path: '/dashboard',
     element: <Dashboard />,
+    errorElement: <ErrorPage />
+  },
+  {
+    path: '/test',
+    element: <TestPage />,
     errorElement: <ErrorPage />
   }
 ]);
