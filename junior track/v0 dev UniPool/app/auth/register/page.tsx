@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { CheckCircle, AlertCircle } from "lucide-react"
+import { CheckCircle, AlertCircle, Eye, EyeOff } from "lucide-react"
 import { AuthService } from "@/services/AuthService"
 
 export default function RegisterPage() {
@@ -17,14 +17,17 @@ export default function RegisterPage() {
     email: "",
     name: "",
     role: "",
-    major: "",
-    year: "",
-    phone: ""
+    gender: "",
+    phone: "",
+    password: "",
+    confirmPassword: ""
   })
   
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
   const [loading, setLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [emailValidation, setEmailValidation] = useState<{
     isValid: boolean;
     userType: 'student' | 'faculty' | null;
@@ -59,8 +62,8 @@ export default function RegisterPage() {
     setError("")
   }
 
-  const handleYearChange = (value: string) => {
-    setFormData(prev => ({ ...prev, year: value }))
+  const handleGenderChange = (value: string) => {
+    setFormData(prev => ({ ...prev, gender: value }))
     setError("")
   }
 
@@ -94,12 +97,26 @@ export default function RegisterPage() {
       return false
     }
 
-    // Student-specific validation
-    if (emailValidation.isValid && emailValidation.userType === 'student') {
-      if (!formData.year) {
-        setError('Year is required for students')
-        return false
-      }
+    // Gender validation
+    if (!formData.gender) {
+      setError('Please select your gender')
+      return false
+    }
+    
+    // Password validation
+    if (!formData.password) {
+      setError('Password is required')
+      return false
+    }
+    
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters')
+      return false
+    }
+    
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match')
+      return false
     }
 
     return true
@@ -121,9 +138,9 @@ export default function RegisterPage() {
         email: formData.email,
         name: formData.name,
         role: formData.role as 'driver' | 'rider' | 'both',
-        major: "N/A", // Set to N/A as we're removing the major field
-        year: formData.year,
-        phone: formData.phone
+        gender: formData.gender,
+        phone: formData.phone,
+        password: formData.password
       })
 
       if (user) {
@@ -225,25 +242,21 @@ export default function RegisterPage() {
               </Select>
             </div>
 
-            {/* Student-specific fields */}
-            {emailValidation?.userType === 'student' && (
-              <>
-                <div className="space-y-2">
-                  <Label htmlFor="year">Academic Year *</Label>
-                  <Select value={formData.year} onValueChange={handleYearChange}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select year" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="1">1st Year</SelectItem>
-                      <SelectItem value="2">2nd Year</SelectItem>
-                      <SelectItem value="3">3rd Year</SelectItem>
-                      <SelectItem value="4">4th Year</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </>
-            )}
+            {/* Gender field */}
+            <div className="space-y-2">
+              <Label htmlFor="gender">Gender *</Label>
+              <Select value={formData.gender} onValueChange={handleGenderChange}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select gender" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="male">Male</SelectItem>
+                  <SelectItem value="female">Female</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                  <SelectItem value="prefer-not-to-say">Prefer not to say</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
             {/* Phone Field */}
             <div className="space-y-2">
@@ -257,6 +270,63 @@ export default function RegisterPage() {
                 placeholder="0300-1234567"
                 required
               />
+            </div>
+
+            {/* Password Field */}
+            <div className="space-y-2">
+              <Label htmlFor="password">Password *</Label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  placeholder="Enter your password (min. 6 characters)"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-3"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4 text-gray-500" />
+                  ) : (
+                    <Eye className="h-4 w-4 text-gray-500" />
+                  )}
+                </button>
+              </div>
+              <p className="text-xs text-gray-500">Password must be at least 6 characters</p>
+            </div>
+            
+            {/* Confirm Password Field */}
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">Confirm Password *</Label>
+              <div className="relative">
+                <Input
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  type={showConfirmPassword ? "text" : "password"}
+                  value={formData.confirmPassword}
+                  onChange={handleInputChange}
+                  placeholder="Confirm your password"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-3"
+                  aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff className="h-4 w-4 text-gray-500" />
+                  ) : (
+                    <Eye className="h-4 w-4 text-gray-500" />
+                  )}
+                </button>
+              </div>
             </div>
 
             {/* Error Display */}

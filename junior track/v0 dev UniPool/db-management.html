@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clear Users Database</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f9fafb;
+        }
+        h1 {
+            color: #111827;
+        }
+        .card {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .action-button {
+            background-color: #4f46e5;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .action-button:hover {
+            background-color: #4338ca;
+        }
+        .destructive-button {
+            background-color: #ef4444;
+        }
+        .destructive-button:hover {
+            background-color: #dc2626;
+        }
+        .info {
+            margin-top: 20px;
+            color: #4b5563;
+        }
+        .results {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #e5e7eb;
+            white-space: pre-wrap;
+            font-family: monospace;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .success {
+            color: #16a34a;
+        }
+        .error {
+            color: #dc2626;
+        }
+    </style>
+</head>
+<body>
+    <h1>UniPool Database Management</h1>
+    
+    <div class="card">
+        <h2>Database Operations</h2>
+        <button id="clearButton" class="action-button destructive-button">Clear All Users</button>
+        <button id="statsButton" class="action-button">Show Database Stats</button>
+        <button id="resetButton" class="action-button">Reset Database to Initial Data</button>
+        
+        <div id="results" class="results">Console output will appear here...</div>
+    </div>
+    
+    <div class="info">
+        <p><strong>Warning:</strong> Clearing users will permanently remove all user accounts. This cannot be undone unless you reset the database to initial data.</p>
+    </div>
+
+    <script type="module">
+        import { AuthService } from './services/AuthService.js';
+
+        // Function to redirect console.log to our results div
+        const originalConsole = {
+            log: console.log,
+            error: console.error
+        };
+        
+        const resultsDiv = document.getElementById('results');
+        
+        console.log = function() {
+            const args = Array.from(arguments);
+            originalConsole.log.apply(console, args);
+            
+            resultsDiv.innerHTML += `<div>${args.join(' ')}</div>`;
+            resultsDiv.scrollTop = resultsDiv.scrollHeight;
+        };
+        
+        console.error = function() {
+            const args = Array.from(arguments);
+            originalConsole.error.apply(console, args);
+            
+            resultsDiv.innerHTML += `<div class="error">${args.join(' ')}</div>`;
+            resultsDiv.scrollTop = resultsDiv.scrollHeight;
+        };
+        
+        // Initialize the AuthService
+        window.addEventListener('DOMContentLoaded', async () => {
+            resultsDiv.innerHTML = 'Initializing database...\n';
+            await AuthService.initializeDatabase();
+            console.log('Database initialized');
+        });
+        
+        // Clear users button
+        document.getElementById('clearButton').addEventListener('click', async () => {
+            resultsDiv.innerHTML = '';
+            try {
+                console.log('Clearing all users from database...');
+                
+                // Get stats before clearing
+                const statsBefore = AuthService.getDatabaseStats();
+                console.log(`Before: Users: ${statsBefore.users}, Rides: ${statsBefore.rides}, Bookings: ${statsBefore.bookings}`);
+                
+                // Clear all users
+                await AuthService.clearAllUsers();
+                
+                // Get stats after clearing
+                const statsAfter = AuthService.getDatabaseStats();
+                console.log(`After: Users: ${statsAfter.users}, Rides: ${statsAfter.rides}, Bookings: ${statsAfter.bookings}`);
+                
+                console.log('✅ All users cleared successfully!');
+            } catch (error) {
+                console.error('❌ Error clearing users:', error);
+            }
+        });
+        
+        // Show database stats button
+        document.getElementById('statsButton').addEventListener('click', () => {
+            resultsDiv.innerHTML = '';
+            try {
+                const stats = AuthService.getDatabaseStats();
+                console.log('Current Database Statistics:');
+                console.log(`Users: ${stats.users}`);
+                console.log(`Rides: ${stats.rides}`);
+                console.log(`Bookings: ${stats.bookings}`);
+                
+                // Get a sample user if available
+                if (stats.users > 0) {
+                    const data = AuthService.getAllData();
+                    if (data.users && data.users.length > 0) {
+                        console.log('\nSample User:');
+                        console.log(JSON.stringify(data.users[0], null, 2));
+                    }
+                }
+            } catch (error) {
+                console.error('❌ Error getting database stats:', error);
+            }
+        });
+        
+        // Reset database button
+        document.getElementById('resetButton').addEventListener('click', async () => {
+            resultsDiv.innerHTML = '';
+            try {
+                console.log('Resetting database to initial state...');
+                await AuthService.resetDatabase();
+                
+                const stats = AuthService.getDatabaseStats();
+                console.log('Database reset complete!');
+                console.log(`Users: ${stats.users}, Rides: ${stats.rides}, Bookings: ${stats.bookings}`);
+            } catch (error) {
+                console.error('❌ Error resetting database:', error);
+            }
+        });
+    </script>
+</body>
+</html>
