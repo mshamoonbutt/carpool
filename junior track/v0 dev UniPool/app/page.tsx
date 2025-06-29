@@ -36,18 +36,12 @@ export default function HomePage() {
           <div className="space-x-4">
             {isLoggedIn ? (
               <>
-                <Button onClick={() => router.push("/demo")} variant="outline">
-                  Demo
-                </Button>
                 <Button onClick={() => router.push("/dashboard")} variant="outline">
                   Dashboard
                 </Button>
               </>
             ) : (
               <>
-                <Button onClick={() => router.push("/demo")} variant="outline">
-                  Demo
-                </Button>
                 <Button onClick={() => router.push("/auth/login")} variant="outline">
                   Login
                 </Button>

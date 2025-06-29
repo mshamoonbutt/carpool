@@ -83,16 +83,6 @@ export default function LoginPage() {
     setLoading(false)
   }
 
-  // Quick login helper for demo
-  const quickLogin = (demoEmail: string) => {
-    setEmail(demoEmail)
-    // Set a default password for quick demo login
-    setPassword("password123")
-    const validation = AuthService.validateEmail(demoEmail)
-    setEmailValidation(validation)
-    setError("")
-  }
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <Card className="w-full max-w-md">
@@ -201,27 +191,6 @@ export default function LoginPage() {
               {loading ? "Signing In..." : "Sign In"}
             </Button>
           </form>
-
-          {/* Quick Login for Demo */}
-          <div className="mt-6 p-3 bg-blue-50 border border-blue-200 rounded-md">
-            <p className="text-sm text-blue-700 font-medium mb-2">Quick Demo Login:</p>
-            <div className="space-y-1 text-xs">
-              <button
-                type="button"
-                onClick={() => quickLogin('ahmed.hassan@formanite.fccollege.edu.pk')}
-                className="block w-full text-left text-blue-600 hover:text-blue-800 hover:underline"
-              >
-                • ahmed.hassan@formanite.fccollege.edu.pk (Student)
-              </button>
-              <button
-                type="button"
-                onClick={() => quickLogin('dr.tariq@fccollege.edu.pk')}
-                className="block w-full text-left text-blue-600 hover:text-blue-800 hover:underline"
-              >
-                • dr.tariq@fccollege.edu.pk (Faculty)
-              </button>
-            </div>
-          </div>
 
           {/* Switch to Register */}
           <div className="mt-6 text-center text-sm">
