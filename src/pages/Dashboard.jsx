@@ -2,6 +2,8 @@ import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MapboxMap from '../components/map/MapboxMap';
 import DataService from '../services/DataService';
+import AuthService from '../services/AuthService';
+import { lahoreLocations, searchLocations, getNearbyLocations } from '../data/locations.js';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -42,17 +44,17 @@ export default function Dashboard() {
   const [newRidesCount, setNewRidesCount] = useState(0);
   const [isSearchingLocations, setIsSearchingLocations] = useState(false);
 
+  // Using centralized location data from src/data/locations.js
+  const predefinedLocations = lahoreLocations;
+
   useEffect(() => {
-    // Check authentication
-    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-    console.log('🔍 Dashboard: Checking authentication...');
-    console.log('Dashboard: Current user from localStorage:', currentUser);
+    // Get current user from AuthService
+    const currentUser = AuthService.getCurrentUser();
+    console.log('🔍 Dashboard: Getting current user...');
+    console.log('Dashboard: Current user:', currentUser);
     
-    if (!currentUser) {
-      console.log('❌ Dashboard: No user found, redirecting to login');
-      navigate('/login');
-    } else {
-      console.log('✅ Dashboard: User authenticated:', currentUser.name);
+    if (currentUser) {
+      console.log('✅ Dashboard: User loaded:', currentUser.name);
       setUser(currentUser);
     }
 
@@ -60,7 +62,7 @@ export default function Dashboard() {
     if ('Notification' in window && Notification.permission === 'default') {
       Notification.requestPermission();
     }
-  }, [navigate]);
+  }, []);
 
   useEffect(() => {
     // Debug container dimensions
@@ -539,10 +541,16 @@ export default function Dashboard() {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('currentUser');
-    // Reload the page to reset all app state
-    window.location.href = '/';
+  const handleLogout = async () => {
+    try {
+      await AuthService.logout();
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Fallback to manual logout
+      localStorage.removeItem('currentUser');
+      navigate('/login');
+    }
   };
 
   // Geocoding function to convert address to coordinates
@@ -581,138 +589,40 @@ export default function Dashboard() {
     }
   };
 
-  // Predefined locations for common places (expanded for students)
-  const predefinedLocations = {
-    'FCC University': {
-      name: 'Forman Christian College University, Lahore',
-      coordinates: [74.331627, 31.522381]
-    },
-    'Hafeez Centre': {
-      name: 'Hafeez Centre, Gulberg III, Lahore',
-      coordinates: [74.343, 31.5155]
-    },
-    'Mall Road': {
-      name: 'Mall Road, Lahore',
-      coordinates: [74.3436, 31.4662]
-    },
-    'DHA Phase 1': {
-      name: 'DHA Phase 1, Lahore',
-      coordinates: [74.3800, 31.4800]
-    },
-    'DHA Phase 2': {
-      name: 'DHA Phase 2, Lahore',
-      coordinates: [74.3850, 31.4850]
-    },
-    'DHA Phase 3': {
-      name: 'DHA Phase 3, Lahore',
-      coordinates: [74.3900, 31.4900]
-    },
-    'DHA Phase 4': {
-      name: 'DHA Phase 4, Lahore',
-      coordinates: [74.3950, 31.4950]
-    },
-    'DHA Phase 5': {
-      name: 'DHA Phase 5, Lahore',
-      coordinates: [74.4000, 31.5000]
-    },
-    'DHA Phase 6': {
-      name: 'DHA Phase 6, Lahore',
-      coordinates: [74.4050, 31.5050]
-    },
-    'Lahore Airport': {
-      name: 'Allama Iqbal International Airport, Lahore',
-      coordinates: [74.4036, 31.5216]
-    },
-    'Gulberg III': {
-      name: 'Gulberg III, Lahore',
-      coordinates: [74.3450, 31.5200]
-    },
-    'Gulberg IV': {
-      name: 'Gulberg IV, Lahore',
-      coordinates: [74.3500, 31.5250]
-    },
-    'Gulberg V': {
-      name: 'Gulberg V, Lahore',
-      coordinates: [74.3550, 31.5300]
-    },
-    'Model Town': {
-      name: 'Model Town, Lahore',
-      coordinates: [74.3600, 31.5350]
-    },
-    'Johar Town': {
-      name: 'Johar Town, Lahore',
-      coordinates: [74.3650, 31.5400]
-    },
-    'Faisal Town': {
-      name: 'Faisal Town, Lahore',
-      coordinates: [74.3700, 31.5450]
-    },
-    'Wapda Town': {
-      name: 'Wapda Town, Lahore',
-      coordinates: [74.3750, 31.5500]
-    },
-    'Bahria Town': {
-      name: 'Bahria Town, Lahore',
-      coordinates: [74.3800, 31.5550]
-    },
-    'Askari X': {
-      name: 'Askari X, Lahore',
-      coordinates: [74.3850, 31.5600]
-    },
-    'Askari XI': {
-      name: 'Askari XI, Lahore',
-      coordinates: [74.3900, 31.5650]
-    },
-    'Cantt': {
-      name: 'Lahore Cantt',
-      coordinates: [74.3950, 31.5700]
-    },
-    'Canal Bank': {
-      name: 'Canal Bank, Lahore',
-      coordinates: [74.4000, 31.5750]
-    },
-    'Thokar Niaz Baig': {
-      name: 'Thokar Niaz Baig, Lahore',
-      coordinates: [74.4050, 31.5800]
-    },
-    'Multan Road': {
-      name: 'Multan Road, Lahore',
-      coordinates: [74.4100, 31.5850]
-    },
-    'Ferozepur Road': {
-      name: 'Ferozepur Road, Lahore',
-      coordinates: [74.4150, 31.5900]
-    }
-  };
-
   // Handle origin input changes
   const handleOriginChange = async (value) => {
     setOrigin(value);
+    console.log('🔍 Searching for origin:', value);
+    
     if (value.length > 1) { // Reduced from 2 to 1 for faster suggestions
       setIsSearchingLocations(true);
       
       try {
-        // Check predefined locations first (exact matches and partial matches)
-        const predefinedMatches = Object.entries(predefinedLocations)
-          .filter(([key, location]) => {
-            const searchTerm = value.toLowerCase();
-            return key.toLowerCase().includes(searchTerm) ||
-                   location.name.toLowerCase().includes(searchTerm) ||
-                   location.name.toLowerCase().includes(searchTerm.replace(/\s+/g, ' '));
-          })
-          .map(([key, location]) => ({
-            name: location.name,
-            coordinates: location.coordinates,
-            type: 'predefined',
-            relevance: key.toLowerCase() === value.toLowerCase() ? 1 : 0.8
-          }))
-          .sort((a, b) => b.relevance - a.relevance);
+        // Use centralized location search
+        const locationMatches = searchLocations(value);
+        console.log('📍 Location matches found:', locationMatches.length);
+        locationMatches.forEach(match => {
+          console.log(`  - ${match.name} (${match.category})`);
+        });
+        
+        // Convert to the expected format
+        const predefinedMatches = locationMatches.map(location => ({
+          name: location.name,
+          coordinates: location.coordinates,
+          type: 'predefined',
+          relevance: location.relevance,
+          category: location.category,
+          description: location.description
+        }));
 
         // Get geocoding suggestions
         const geocodingSuggestions = await geocodeAddress(value);
+        console.log('🌐 Geocoding suggestions found:', geocodingSuggestions.length);
         
         // Combine and sort by relevance, with predefined locations first
         const allSuggestions = [...predefinedMatches, ...geocodingSuggestions];
+        console.log('📋 Total suggestions:', allSuggestions.length);
+        
         setOriginSuggestions(allSuggestions);
         setShowOriginSuggestions(allSuggestions.length > 0);
       } catch (error) {
@@ -726,34 +636,74 @@ export default function Dashboard() {
     }
   };
 
+  // Show all locations when origin input is focused
+  const handleOriginFocus = async () => {
+    console.log('🔍 Origin input focused - showing all locations');
+    setIsSearchingLocations(true);
+    
+    try {
+      // Get all locations and convert to suggestions format
+      const allLocations = Object.entries(lahoreLocations).map(([key, location]) => ({
+        name: location.name,
+        coordinates: location.coordinates,
+        type: 'predefined',
+        relevance: 1,
+        category: location.category,
+        description: location.description
+      }));
+      
+      // Sort by category and name for better organization
+      allLocations.sort((a, b) => {
+        if (a.category === b.category) {
+          return a.name.localeCompare(b.name);
+        }
+        return a.category.localeCompare(b.category);
+      });
+      
+      console.log('📍 All locations loaded:', allLocations.length);
+      setOriginSuggestions(allLocations);
+      setShowOriginSuggestions(true);
+    } catch (error) {
+      console.error('Error loading all locations:', error);
+    } finally {
+      setIsSearchingLocations(false);
+    }
+  };
+
   // Handle destination input changes
   const handleDestinationChange = async (value) => {
     setDestination(value);
+    console.log('🔍 Searching for destination:', value);
+    
     if (value.length > 1) { // Reduced from 2 to 1 for faster suggestions
       setIsSearchingLocations(true);
       
       try {
-        // Check predefined locations first (exact matches and partial matches)
-        const predefinedMatches = Object.entries(predefinedLocations)
-          .filter(([key, location]) => {
-            const searchTerm = value.toLowerCase();
-            return key.toLowerCase().includes(searchTerm) ||
-                   location.name.toLowerCase().includes(searchTerm) ||
-                   location.name.toLowerCase().includes(searchTerm.replace(/\s+/g, ' '));
-          })
-          .map(([key, location]) => ({
-            name: location.name,
-            coordinates: location.coordinates,
-            type: 'predefined',
-            relevance: key.toLowerCase() === value.toLowerCase() ? 1 : 0.8
-          }))
-          .sort((a, b) => b.relevance - a.relevance);
+        // Use centralized location search
+        const locationMatches = searchLocations(value);
+        console.log('📍 Location matches found:', locationMatches.length);
+        locationMatches.forEach(match => {
+          console.log(`  - ${match.name} (${match.category})`);
+        });
+        
+        // Convert to the expected format
+        const predefinedMatches = locationMatches.map(location => ({
+          name: location.name,
+          coordinates: location.coordinates,
+          type: 'predefined',
+          relevance: location.relevance,
+          category: location.category,
+          description: location.description
+        }));
 
         // Get geocoding suggestions
         const geocodingSuggestions = await geocodeAddress(value);
+        console.log('🌐 Geocoding suggestions found:', geocodingSuggestions.length);
         
         // Combine and sort by relevance, with predefined locations first
         const allSuggestions = [...predefinedMatches, ...geocodingSuggestions];
+        console.log('📋 Total suggestions:', allSuggestions.length);
+        
         setDestinationSuggestions(allSuggestions);
         setShowDestinationSuggestions(allSuggestions.length > 0);
       } catch (error) {
@@ -764,6 +714,40 @@ export default function Dashboard() {
     } else {
       setDestinationSuggestions([]);
       setShowDestinationSuggestions(false);
+    }
+  };
+
+  // Show all locations when destination input is focused
+  const handleDestinationFocus = async () => {
+    console.log('🔍 Destination input focused - showing all locations');
+    setIsSearchingLocations(true);
+    
+    try {
+      // Get all locations and convert to suggestions format
+      const allLocations = Object.entries(lahoreLocations).map(([key, location]) => ({
+        name: location.name,
+        coordinates: location.coordinates,
+        type: 'predefined',
+        relevance: 1,
+        category: location.category,
+        description: location.description
+      }));
+      
+      // Sort by category and name for better organization
+      allLocations.sort((a, b) => {
+        if (a.category === b.category) {
+          return a.name.localeCompare(b.name);
+        }
+        return a.category.localeCompare(b.category);
+      });
+      
+      console.log('📍 All locations loaded:', allLocations.length);
+      setDestinationSuggestions(allLocations);
+      setShowDestinationSuggestions(true);
+    } catch (error) {
+      console.error('Error loading all locations:', error);
+    } finally {
+      setIsSearchingLocations(false);
     }
   };
 
@@ -950,8 +934,8 @@ export default function Dashboard() {
     const testOrigin = 'FCC University';
     const testDestination = 'Model Town';
     
-    const originLoc = predefinedLocations[testOrigin];
-    const destLoc = predefinedLocations[testDestination];
+    const originLoc = lahoreLocations[testOrigin];
+    const destLoc = lahoreLocations[testDestination];
     
     if (!originLoc || !destLoc) {
       console.error('Test locations not found');
@@ -1043,6 +1027,13 @@ export default function Dashboard() {
               🔧 Test API
             </button>
             <button
+              onClick={() => window.testAllLocations && window.testAllLocations()}
+              className="px-3 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-sm"
+              title="Test all locations"
+            >
+              📍 Test Locations
+            </button>
+            <button
               onClick={handleLogout}
               className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
             >
@@ -1064,7 +1055,7 @@ export default function Dashboard() {
                     type="text"
                     value={origin}
                     onChange={(e) => handleOriginChange(e.target.value)}
-                    onFocus={() => setShowOriginSuggestions(originSuggestions.length > 0)}
+                    onFocus={handleOriginFocus}
                     onBlur={() => setTimeout(() => setShowOriginSuggestions(false), 200)}
                     placeholder="Enter pickup location"
                     className="w-full px-4 py-2 bg-[#0F172A] text-white border border-slate-600 rounded-lg focus:outline-none focus:border-cyan-400"
@@ -1087,11 +1078,11 @@ export default function Dashboard() {
               
               {/* Quick Location Buttons */}
               <div className="mt-2 flex flex-wrap gap-1">
-                {['FCC University', 'DHA Phase 1', 'Gulberg III', 'Model Town'].map((place) => (
+                {['FCC University', 'DHA Phase 1', 'Gulberg III', 'Model Town', 'Allama Iqbal Town'].map((place) => (
                   <button
                     key={place}
                     onClick={() => {
-                      const location = predefinedLocations[place];
+                      const location = lahoreLocations[place];
                       if (location) {
                         setOrigin(location.name);
                         if (destination) {
@@ -1107,20 +1098,25 @@ export default function Dashboard() {
               </div>
               
               {showOriginSuggestions && (
-                <div className="absolute z-10 w-full mt-1 bg-[#0F172A] border border-slate-600 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                <div className="absolute z-10 w-full mt-1 bg-[#0F172A] border border-slate-600 rounded-lg shadow-lg max-h-64 overflow-y-auto">
                   {originSuggestions.map((suggestion, index) => (
                     <div
                       key={index}
                       onClick={() => selectOrigin(suggestion)}
-                      className="px-4 py-2 text-white hover:bg-slate-700 cursor-pointer border-b border-slate-600 last:border-b-0"
+                      className="px-4 py-3 text-white hover:bg-slate-700 cursor-pointer border-b border-slate-600 last:border-b-0"
                     >
                       <div className="flex items-center justify-between">
-                        <div>
-                          <div className="font-medium">{suggestion.name.split(',')[0]}</div>
+                        <div className="flex-1">
+                          <div className="font-medium text-cyan-300">{suggestion.name.split(',')[0]}</div>
                           <div className="text-sm text-slate-400">{suggestion.name}</div>
+                          {suggestion.category && (
+                            <div className="text-xs text-slate-500 mt-1">
+                              📍 {suggestion.category.charAt(0).toUpperCase() + suggestion.category.slice(1)}
+                            </div>
+                          )}
                         </div>
                         {suggestion.type === 'predefined' && (
-                          <span className="text-xs bg-cyan-600 text-cyan-100 px-2 py-1 rounded">
+                          <span className="text-xs bg-cyan-600 text-cyan-100 px-2 py-1 rounded ml-2">
                             📍 Saved
                           </span>
                         )}
@@ -1137,7 +1133,7 @@ export default function Dashboard() {
                   type="text"
                   value={destination}
                   onChange={(e) => handleDestinationChange(e.target.value)}
-                  onFocus={() => setShowDestinationSuggestions(destinationSuggestions.length > 0)}
+                  onFocus={handleDestinationFocus}
                   onBlur={() => setTimeout(() => setShowDestinationSuggestions(false), 200)}
                   placeholder="Enter destination"
                   className="w-full px-4 py-2 bg-[#0F172A] text-white border border-slate-600 rounded-lg focus:outline-none focus:border-cyan-400"
@@ -1151,11 +1147,11 @@ export default function Dashboard() {
               
               {/* Quick Location Buttons for Destination */}
               <div className="mt-2 flex flex-wrap gap-1">
-                {['FCC University', 'DHA Phase 1', 'Gulberg III', 'Model Town'].map((place) => (
+                {['FCC University', 'DHA Phase 1', 'Gulberg III', 'Model Town', 'Allama Iqbal Town'].map((place) => (
                   <button
                     key={place}
                     onClick={() => {
-                      const location = predefinedLocations[place];
+                      const location = lahoreLocations[place];
                       if (location) {
                         setDestination(location.name);
                         if (origin) {
@@ -1171,15 +1167,29 @@ export default function Dashboard() {
               </div>
               
               {showDestinationSuggestions && (
-                <div className="absolute z-10 w-full mt-1 bg-[#0F172A] border border-slate-600 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                <div className="absolute z-10 w-full mt-1 bg-[#0F172A] border border-slate-600 rounded-lg shadow-lg max-h-64 overflow-y-auto">
                   {destinationSuggestions.map((suggestion, index) => (
                     <div
                       key={index}
                       onClick={() => selectDestination(suggestion)}
-                      className="px-4 py-2 text-white hover:bg-slate-700 cursor-pointer border-b border-slate-600 last:border-b-0"
+                      className="px-4 py-3 text-white hover:bg-slate-700 cursor-pointer border-b border-slate-600 last:border-b-0"
                     >
-                      <div className="font-medium">{suggestion.name.split(',')[0]}</div>
-                      <div className="text-sm text-slate-400">{suggestion.name}</div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <div className="font-medium text-cyan-300">{suggestion.name.split(',')[0]}</div>
+                          <div className="text-sm text-slate-400">{suggestion.name}</div>
+                          {suggestion.category && (
+                            <div className="text-xs text-slate-500 mt-1">
+                              📍 {suggestion.category.charAt(0).toUpperCase() + suggestion.category.slice(1)}
+                            </div>
+                          )}
+                        </div>
+                        {suggestion.type === 'predefined' && (
+                          <span className="text-xs bg-cyan-600 text-cyan-100 px-2 py-1 rounded ml-2">
+                            📍 Saved
+                          </span>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -1386,7 +1396,7 @@ export default function Dashboard() {
                             type="text"
                             value={origin}
                             onChange={(e) => handleOriginChange(e.target.value)}
-                            onFocus={() => setShowOriginSuggestions(originSuggestions.length > 0)}
+                            onFocus={handleOriginFocus}
                             onBlur={() => setTimeout(() => setShowOriginSuggestions(false), 200)}
                             placeholder="Enter pickup location"
                             className="w-full px-4 py-2 bg-[#0F172A] text-white border border-slate-600 rounded-lg focus:outline-none focus:border-cyan-400"
@@ -1409,11 +1419,11 @@ export default function Dashboard() {
                       
                       {/* Quick Location Buttons */}
                       <div className="mt-2 flex flex-wrap gap-1">
-                        {['FCC University', 'DHA Phase 1', 'Gulberg III', 'Model Town'].map((place) => (
+                        {['FCC University', 'DHA Phase 1', 'Gulberg III', 'Model Town', 'Allama Iqbal Town'].map((place) => (
                           <button
                             key={place}
                             onClick={() => {
-                              const location = predefinedLocations[place];
+                              const location = lahoreLocations[place];
                               if (location) {
                                 setOrigin(location.name);
                                 if (destination) {
@@ -1429,20 +1439,25 @@ export default function Dashboard() {
                       </div>
                       
                       {showOriginSuggestions && (
-                        <div className="absolute z-10 w-full mt-1 bg-[#0F172A] border border-slate-600 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                        <div className="absolute z-10 w-full mt-1 bg-[#0F172A] border border-slate-600 rounded-lg shadow-lg max-h-64 overflow-y-auto">
                           {originSuggestions.map((suggestion, index) => (
                             <div
                               key={index}
                               onClick={() => selectOrigin(suggestion)}
-                              className="px-4 py-2 text-white hover:bg-slate-700 cursor-pointer border-b border-slate-600 last:border-b-0"
+                              className="px-4 py-3 text-white hover:bg-slate-700 cursor-pointer border-b border-slate-600 last:border-b-0"
                             >
                               <div className="flex items-center justify-between">
-                                <div>
-                                  <div className="font-medium">{suggestion.name.split(',')[0]}</div>
+                                <div className="flex-1">
+                                  <div className="font-medium text-cyan-300">{suggestion.name.split(',')[0]}</div>
                                   <div className="text-sm text-slate-400">{suggestion.name}</div>
+                                  {suggestion.category && (
+                                    <div className="text-xs text-slate-500 mt-1">
+                                      📍 {suggestion.category.charAt(0).toUpperCase() + suggestion.category.slice(1)}
+                                    </div>
+                                  )}
                                 </div>
                                 {suggestion.type === 'predefined' && (
-                                  <span className="text-xs bg-cyan-600 text-cyan-100 px-2 py-1 rounded">
+                                  <span className="text-xs bg-cyan-600 text-cyan-100 px-2 py-1 rounded ml-2">
                                     📍 Saved
                                   </span>
                                 )}
@@ -1460,7 +1475,7 @@ export default function Dashboard() {
                           type="text"
                           value={destination}
                           onChange={(e) => handleDestinationChange(e.target.value)}
-                          onFocus={() => setShowDestinationSuggestions(destinationSuggestions.length > 0)}
+                          onFocus={handleDestinationFocus}
                           onBlur={() => setTimeout(() => setShowDestinationSuggestions(false), 200)}
                           placeholder="Enter destination"
                           className="w-full px-4 py-2 bg-[#0F172A] text-white border border-slate-600 rounded-lg focus:outline-none focus:border-cyan-400"
@@ -1473,15 +1488,29 @@ export default function Dashboard() {
                       </div>
                       
                       {showDestinationSuggestions && (
-                        <div className="absolute z-10 w-full mt-1 bg-[#0F172A] border border-slate-600 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                        <div className="absolute z-10 w-full mt-1 bg-[#0F172A] border border-slate-600 rounded-lg shadow-lg max-h-64 overflow-y-auto">
                           {destinationSuggestions.map((suggestion, index) => (
                             <div
                               key={index}
                               onClick={() => selectDestination(suggestion)}
-                              className="px-4 py-2 text-white hover:bg-slate-700 cursor-pointer border-b border-slate-600 last:border-b-0"
+                              className="px-4 py-3 text-white hover:bg-slate-700 cursor-pointer border-b border-slate-600 last:border-b-0"
                             >
-                              <div className="font-medium">{suggestion.name.split(',')[0]}</div>
-                              <div className="text-sm text-slate-400">{suggestion.name}</div>
+                              <div className="flex items-center justify-between">
+                                <div className="flex-1">
+                                  <div className="font-medium text-cyan-300">{suggestion.name.split(',')[0]}</div>
+                                  <div className="text-sm text-slate-400">{suggestion.name}</div>
+                                  {suggestion.category && (
+                                    <div className="text-xs text-slate-500 mt-1">
+                                      📍 {suggestion.category.charAt(0).toUpperCase() + suggestion.category.slice(1)}
+                                    </div>
+                                  )}
+                                </div>
+                                {suggestion.type === 'predefined' && (
+                                  <span className="text-xs bg-cyan-600 text-cyan-100 px-2 py-1 rounded ml-2">
+                                    📍 Saved
+                                  </span>
+                                )}
+                              </div>
                             </div>
                           ))}
                         </div>
@@ -1634,7 +1663,7 @@ export default function Dashboard() {
                             type="text"
                             value={origin}
                             onChange={(e) => handleOriginChange(e.target.value)}
-                            onFocus={() => setShowOriginSuggestions(originSuggestions.length > 0)}
+                            onFocus={handleOriginFocus}
                             onBlur={() => setTimeout(() => setShowOriginSuggestions(false), 200)}
                             placeholder="Enter pickup location"
                             className="w-full px-4 py-2 bg-[#0F172A] text-white border border-slate-600 rounded-lg focus:outline-none focus:border-cyan-400"
@@ -1657,11 +1686,11 @@ export default function Dashboard() {
                       
                       {/* Quick Location Buttons */}
                       <div className="mt-2 flex flex-wrap gap-1">
-                        {['FCC University', 'DHA Phase 1', 'Gulberg III', 'Model Town'].map((place) => (
+                        {['FCC University', 'DHA Phase 1', 'Gulberg III', 'Model Town', 'Allama Iqbal Town'].map((place) => (
                           <button
                             key={place}
                             onClick={() => {
-                              const location = predefinedLocations[place];
+                              const location = lahoreLocations[place];
                               if (location) {
                                 setOrigin(location.name);
                                 if (destination) {
@@ -1677,20 +1706,25 @@ export default function Dashboard() {
                       </div>
                       
                       {showOriginSuggestions && (
-                        <div className="absolute z-10 w-full mt-1 bg-[#0F172A] border border-slate-600 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                        <div className="absolute z-10 w-full mt-1 bg-[#0F172A] border border-slate-600 rounded-lg shadow-lg max-h-64 overflow-y-auto">
                           {originSuggestions.map((suggestion, index) => (
                             <div
                               key={index}
                               onClick={() => selectOrigin(suggestion)}
-                              className="px-4 py-2 text-white hover:bg-slate-700 cursor-pointer border-b border-slate-600 last:border-b-0"
+                              className="px-4 py-3 text-white hover:bg-slate-700 cursor-pointer border-b border-slate-600 last:border-b-0"
                             >
                               <div className="flex items-center justify-between">
-                                <div>
-                                  <div className="font-medium">{suggestion.name.split(',')[0]}</div>
+                                <div className="flex-1">
+                                  <div className="font-medium text-cyan-300">{suggestion.name.split(',')[0]}</div>
                                   <div className="text-sm text-slate-400">{suggestion.name}</div>
+                                  {suggestion.category && (
+                                    <div className="text-xs text-slate-500 mt-1">
+                                      📍 {suggestion.category.charAt(0).toUpperCase() + suggestion.category.slice(1)}
+                                    </div>
+                                  )}
                                 </div>
                                 {suggestion.type === 'predefined' && (
-                                  <span className="text-xs bg-cyan-600 text-cyan-100 px-2 py-1 rounded">
+                                  <span className="text-xs bg-cyan-600 text-cyan-100 px-2 py-1 rounded ml-2">
                                     📍 Saved
                                   </span>
                                 )}
@@ -1708,7 +1742,7 @@ export default function Dashboard() {
                           type="text"
                           value={destination}
                           onChange={(e) => handleDestinationChange(e.target.value)}
-                          onFocus={() => setShowDestinationSuggestions(destinationSuggestions.length > 0)}
+                          onFocus={handleDestinationFocus}
                           onBlur={() => setTimeout(() => setShowDestinationSuggestions(false), 200)}
                           placeholder="Enter destination"
                           className="w-full px-4 py-2 bg-[#0F172A] text-white border border-slate-600 rounded-lg focus:outline-none focus:border-cyan-400"
@@ -1721,15 +1755,29 @@ export default function Dashboard() {
                       </div>
                       
                       {showDestinationSuggestions && (
-                        <div className="absolute z-10 w-full mt-1 bg-[#0F172A] border border-slate-600 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                        <div className="absolute z-10 w-full mt-1 bg-[#0F172A] border border-slate-600 rounded-lg shadow-lg max-h-64 overflow-y-auto">
                           {destinationSuggestions.map((suggestion, index) => (
                             <div
                               key={index}
                               onClick={() => selectDestination(suggestion)}
-                              className="px-4 py-2 text-white hover:bg-slate-700 cursor-pointer border-b border-slate-600 last:border-b-0"
+                              className="px-4 py-3 text-white hover:bg-slate-700 cursor-pointer border-b border-slate-600 last:border-b-0"
                             >
-                              <div className="font-medium">{suggestion.name.split(',')[0]}</div>
-                              <div className="text-sm text-slate-400">{suggestion.name}</div>
+                              <div className="flex items-center justify-between">
+                                <div className="flex-1">
+                                  <div className="font-medium text-cyan-300">{suggestion.name.split(',')[0]}</div>
+                                  <div className="text-sm text-slate-400">{suggestion.name}</div>
+                                  {suggestion.category && (
+                                    <div className="text-xs text-slate-500 mt-1">
+                                      📍 {suggestion.category.charAt(0).toUpperCase() + suggestion.category.slice(1)}
+                                    </div>
+                                  )}
+                                </div>
+                                {suggestion.type === 'predefined' && (
+                                  <span className="text-xs bg-cyan-600 text-cyan-100 px-2 py-1 rounded ml-2">
+                                    📍 Saved
+                                  </span>
+                                )}
+                              </div>
                             </div>
                           ))}
                         </div>

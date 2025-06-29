@@ -7,33 +7,29 @@ class AuthService {
         try {
           console.log('🔐 AuthService: Attempting login for:', email);
           
+          // Validate university email
           if (!email.endsWith('@formanite.fccollege.edu.pk')) {
-            throw new Error('Only university emails allowed');
+            throw new Error('Only university emails (@formanite.fccollege.edu.pk) are allowed');
           }
 
-          // First try to get user from main users list (App.jsx test users)
-          const mainUsers = JSON.parse(localStorage.getItem('users') || '[]');
-          console.log('🔐 AuthService: Main users found:', mainUsers.length);
+          // Get test users from localStorage
+          const testUsers = JSON.parse(localStorage.getItem('users') || '[]');
+          console.log('🔐 AuthService: Test users found:', testUsers.length);
           
-          let user = mainUsers.find(u => u.email === email);
+          // Find user by email
+          const user = testUsers.find(u => u.email === email);
           
           if (!user) {
-            console.log('🔐 AuthService: User not found in main users, trying DataService...');
-            // Fallback to DataService
-            user = DataService.getUserByEmail(email);
-          }
-
-          if (!user) {
-            console.log('❌ AuthService: User not found anywhere');
-            throw new Error('User not found');
+            console.log('❌ AuthService: User not found');
+            throw new Error('User not found. Please check your email or register.');
           }
 
           console.log('🔐 AuthService: User found:', user.name);
 
-          // In real app, compare hashed passwords
+          // Simple password check (in real app, use hashed passwords)
           if (user.password !== password) {
             console.log('❌ AuthService: Invalid password');
-            throw new Error('Invalid password');
+            throw new Error('Invalid password. Please try again.');
           }
 
           console.log('✅ AuthService: Login successful, storing user...');
@@ -41,6 +37,9 @@ class AuthService {
           // Store current user
           localStorage.setItem('currentUser', JSON.stringify(user));
           console.log('✅ AuthService: User stored in localStorage');
+          
+          // Trigger auth change event
+          window.dispatchEvent(new Event('authChange'));
           
           resolve(user);
         } catch (error) {
@@ -51,9 +50,13 @@ class AuthService {
     });
   }
 
-  static logout() {
+  static async logout() {
     console.log('🔐 AuthService: Logging out...');
     localStorage.removeItem('currentUser');
+    
+    // Trigger auth change event
+    window.dispatchEvent(new Event('authChange'));
+    
     return Promise.resolve();
   }
 
@@ -64,6 +67,10 @@ class AuthService {
 
   static isAuthenticated() {
     return !!this.getCurrentUser();
+  }
+
+  static validateEmail(email) {
+    return email.endsWith('@formanite.fccollege.edu.pk');
   }
 }
 

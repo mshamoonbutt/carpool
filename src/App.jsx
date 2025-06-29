@@ -3,6 +3,9 @@ import { useEffect, useState } from 'react';
 import { RouterProvider } from 'react-router-dom';
 import { router } from './router.jsx';
 import './App.css';
+import { testRedirections } from './utils/routeTest.js';
+import { debugAuthentication, clearAllAuth, simulateFreshStart } from './utils/debugAuth.js';
+import { testAllLocations } from './utils/testLocations.js';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -13,42 +16,126 @@ function App() {
     try {
       console.log('🚀 App.jsx: Initializing...');
       
-      // Clear any existing test users to ensure fresh passwords
-      const existingUsers = JSON.parse(localStorage.getItem('users') || '[]');
-      console.log('🔍 App.jsx: Existing users found:', existingUsers.length);
-      
-      // Set up test users with correct credentials
+      // Set up comprehensive test users with proper roles
       const testUsers = [
         {
-          id: 'test1',
-          name: 'Student One',
-          email: 'student1@formanite.fccollege.edu.pk',
+          id: 'driver1',
+          name: 'Ali Hassan',
+          email: 'ali.hassan@formanite.fccollege.edu.pk',
           password: 'temp123',
-          type: 'student',
-          ratings: { driver: { average: 4.5, count: 12 }, rider: { average: 4.8, count: 8 } }
+          role: 'driver',
+          university: 'FCC University',
+          profile: {
+            major: 'Computer Science',
+            year: 3,
+            phone: '0300-1234567',
+            vehicle: 'Honda City 2020',
+            licensePlate: 'LHR-1234'
+          },
+          ratings: { 
+            driver: { average: 4.5, count: 12 }, 
+            rider: { average: 4.8, count: 8 } 
+          },
+          preferences: {
+            notifications: true,
+            quietHours: { start: '22:00', end: '06:00' }
+          }
         },
         {
-          id: 'test2',
-          name: 'Student Two',
-          email: 'student2@formanite.fccollege.edu.pk',
-          password: 'temp',
-          type: 'student',
-          ratings: { driver: { average: 4.2, count: 15 }, rider: { average: 4.6, count: 10 } }
+          id: 'rider1',
+          name: 'Sara Khan',
+          email: 'sara.khan@formanite.fccollege.edu.pk',
+          password: 'temp123',
+          role: 'rider',
+          university: 'FCC University',
+          profile: {
+            major: 'Business Administration',
+            year: 2,
+            phone: '0321-7654321'
+          },
+          ratings: { 
+            driver: { average: 0, count: 0 }, 
+            rider: { average: 4.2, count: 15 } 
+          },
+          preferences: {
+            notifications: true,
+            quietHours: { start: '23:00', end: '07:00' }
+          }
+        },
+        {
+          id: 'both1',
+          name: 'Ahmed Raza',
+          email: 'ahmed.raza@formanite.fccollege.edu.pk',
+          password: 'temp123',
+          role: 'both',
+          university: 'FCC University',
+          profile: {
+            major: 'Electrical Engineering',
+            year: 4,
+            phone: '0333-9876543',
+            vehicle: 'Toyota Corolla 2019',
+            licensePlate: 'LHR-5678'
+          },
+          ratings: { 
+            driver: { average: 4.7, count: 20 }, 
+            rider: { average: 4.6, count: 12 } 
+          },
+          preferences: {
+            notifications: true,
+            quietHours: { start: '21:00', end: '06:00' }
+          }
+        },
+        {
+          id: 'driver2',
+          name: 'Fatima Ali',
+          email: 'fatima.ali@formanite.fccollege.edu.pk',
+          password: 'temp123',
+          role: 'driver',
+          university: 'FCC University',
+          profile: {
+            major: 'Psychology',
+            year: 2,
+            phone: '0301-1122334',
+            vehicle: 'Suzuki Cultus 2021',
+            licensePlate: 'LHR-9012'
+          },
+          ratings: { 
+            driver: { average: 4.3, count: 8 }, 
+            rider: { average: 4.9, count: 5 } 
+          },
+          preferences: {
+            notifications: true,
+            quietHours: { start: '22:30', end: '06:30' }
+          }
         }
       ];
       
       localStorage.setItem('users', JSON.stringify(testUsers));
-      console.log('✅ App.jsx: Test users set up:', testUsers.map(u => ({ name: u.name, email: u.email })));
+      console.log('✅ App.jsx: Test users set up:', testUsers.map(u => ({ 
+        name: u.name, 
+        email: u.email, 
+        role: u.role 
+      })));
       
       // Check if user is already logged in
       const storedUser = localStorage.getItem('currentUser');
       if (storedUser) {
-        const user = JSON.parse(storedUser);
-        console.log('🔍 App.jsx: Found stored user:', user.name);
-        setCurrentUser(user);
-        setIsAuthenticated(true);
+        try {
+          const user = JSON.parse(storedUser);
+          console.log('🔍 App.jsx: Found stored user:', user.name);
+          setCurrentUser(user);
+          setIsAuthenticated(true);
+        } catch (error) {
+          console.error('❌ App.jsx: Error parsing stored user:', error);
+          // Clear invalid user data
+          localStorage.removeItem('currentUser');
+          setCurrentUser(null);
+          setIsAuthenticated(false);
+        }
       } else {
         console.log('🔍 App.jsx: No stored user found');
+        setCurrentUser(null);
+        setIsAuthenticated(false);
       }
 
       // Listen for authentication changes
@@ -67,28 +154,22 @@ function App() {
         }
       };
 
-      // Listen for user login events
-      const handleUserLogin = (event) => {
-        console.log('🔄 App.jsx: User login event received:', event.detail);
-        const user = event.detail;
-        setCurrentUser(user);
-        setIsAuthenticated(true);
-      };
-
       window.addEventListener('authChange', handleAuthChange);
-      window.addEventListener('userLoggedIn', handleUserLogin);
 
-      // Debug function to check auth state
+      // Debug functions for testing
       window.checkAuthState = () => {
         console.log('🔍 Debug: Current auth state:', {
           isAuthenticated,
           currentUser: currentUser?.name,
           localStorageUser: localStorage.getItem('currentUser') ? JSON.parse(localStorage.getItem('currentUser')).name : null,
-          testUsers: JSON.parse(localStorage.getItem('users') || '[]').map(u => ({ name: u.name, email: u.email }))
+          testUsers: JSON.parse(localStorage.getItem('users') || '[]').map(u => ({ 
+            name: u.name, 
+            email: u.email, 
+            role: u.role 
+          }))
         });
       };
 
-      // Debug function to clear auth
       window.clearAuth = () => {
         console.log('🧹 Debug: Clearing authentication...');
         localStorage.removeItem('currentUser');
@@ -97,9 +178,31 @@ function App() {
         console.log('✅ Debug: Authentication cleared');
       };
 
+      window.switchUser = (email) => {
+        const users = JSON.parse(localStorage.getItem('users') || '[]');
+        const user = users.find(u => u.email === email);
+        if (user) {
+          localStorage.setItem('currentUser', JSON.stringify(user));
+          window.dispatchEvent(new Event('authChange'));
+          console.log(`✅ Debug: Switched to user: ${user.name}`);
+        } else {
+          console.log(`❌ Debug: User not found: ${email}`);
+        }
+      };
+
+      // Add route testing function
+      window.testRedirections = testRedirections;
+      
+      // Add debug authentication functions
+      window.debugAuth = debugAuthentication;
+      window.clearAllAuth = clearAllAuth;
+      window.simulateFreshStart = simulateFreshStart;
+      
+      // Add location testing function
+      window.testAllLocations = testAllLocations;
+
       return () => {
         window.removeEventListener('authChange', handleAuthChange);
-        window.removeEventListener('userLoggedIn', handleUserLogin);
       };
     } catch (err) {
       console.error('❌ App.jsx: Error during initialization:', err);

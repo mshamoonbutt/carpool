@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Eye, EyeOff } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import AuthService from '../services/AuthService';
 
 export default function LoginBox() {
@@ -12,6 +12,7 @@ export default function LoginBox() {
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -23,16 +24,14 @@ export default function LoginBox() {
       const user = await AuthService.login(email, password);
       setSuccess('Login successful! Redirecting...');
       
-      // AuthService.login already stores the user, now trigger auth change
-      console.log('✅ Login successful, triggering auth change...');
+      console.log('✅ Login successful, redirecting to dashboard...');
       
-      // Trigger custom event to notify App.jsx
-      window.dispatchEvent(new Event('authChange'));
+      // Get the intended destination from location state, or default to dashboard
+      const from = location.state?.from || '/dashboard';
       
-      // Use a more direct approach - reload the page to the dashboard
+      // Use React Router navigation
       setTimeout(() => {
-        console.log('🔄 Redirecting to dashboard...');
-        window.location.href = '/dashboard';
+        navigate(from, { replace: true });
       }, 1000);
       
     } catch (err) {
@@ -68,6 +67,23 @@ export default function LoginBox() {
         >
           Smarter campus commuting. Share, save, connect.
         </motion.p>
+
+        {/* Test Users Info */}
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.6 }}
+          className="bg-slate-800 p-4 rounded-lg mb-6 text-xs"
+        >
+          <p className="text-slate-300 mb-2 font-semibold">🧪 Test Users:</p>
+          <div className="space-y-1 text-slate-400">
+            <p><strong>Driver:</strong> ali.hassan@formanite.fccollege.edu.pk</p>
+            <p><strong>Rider:</strong> sara.khan@formanite.fccollege.edu.pk</p>
+            <p><strong>Both:</strong> ahmed.raza@formanite.fccollege.edu.pk</p>
+            <p><strong>Driver 2:</strong> fatima.ali@formanite.fccollege.edu.pk</p>
+            <p className="text-cyan-400 mt-2"><strong>Password:</strong> temp123</p>
+          </div>
+        </motion.div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>

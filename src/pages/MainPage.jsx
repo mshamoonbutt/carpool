@@ -1,9 +1,22 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import AuthService from '../services/AuthService';
 
 export default function MainPage() {
   const navigate = useNavigate();
+
+  // Clear any existing authentication on page load
+  useEffect(() => {
+    console.log('🔍 MainPage: Checking for existing authentication...');
+    const currentUser = AuthService.getCurrentUser();
+    if (currentUser) {
+      console.log('⚠️ MainPage: Found existing user, redirecting to dashboard');
+      navigate('/dashboard', { replace: true });
+    } else {
+      console.log('✅ MainPage: No existing authentication found');
+    }
+  }, [navigate]);
 
   const quickLogin = () => {
     // Quick test login with student1
@@ -21,7 +34,23 @@ export default function MainPage() {
     
     localStorage.setItem('currentUser', JSON.stringify(testUser));
     window.dispatchEvent(new Event('authChange'));
-    window.location.href = '/dashboard';
+    navigate('/dashboard');
+  };
+
+  const handleSignIn = () => {
+    console.log('🔐 MainPage: User clicked Sign In, navigating to login page');
+    // Clear any existing auth state first
+    localStorage.removeItem('currentUser');
+    window.dispatchEvent(new Event('authChange'));
+    navigate('/login');
+  };
+
+  const handleSignUp = () => {
+    console.log('🔐 MainPage: User clicked Sign Up, navigating to signup page');
+    // Clear any existing auth state first
+    localStorage.removeItem('currentUser');
+    window.dispatchEvent(new Event('authChange'));
+    navigate('/signup');
   };
 
   return (
@@ -51,14 +80,14 @@ export default function MainPage() {
         className="space-y-6 w-full max-w-sm"
       >
         <button 
-          onClick={() => navigate('/login')}
+          onClick={handleSignIn}
           className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white py-4 rounded-full shadow-lg transition transform hover:scale-105 text-lg font-semibold"
         >
           Sign In
         </button>
 
         <button 
-          onClick={() => navigate('/signup')}
+          onClick={handleSignUp}
           className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white py-4 rounded-full shadow-lg transition transform hover:scale-105 text-lg font-semibold"
         >
           Sign Up
@@ -88,7 +117,7 @@ export default function MainPage() {
             
             localStorage.setItem('currentUser', JSON.stringify(testUser));
             window.dispatchEvent(new Event('authChange'));
-            window.location.href = '/dashboard';
+            navigate('/dashboard');
           }}
           className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white py-3 rounded-full shadow-lg transition transform hover:scale-105 text-sm"
         >
@@ -142,6 +171,13 @@ export default function MainPage() {
           className="w-full bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white py-3 rounded-full shadow-lg transition transform hover:scale-105 text-sm"
         >
           🎨 Test GUI Styling
+        </button>
+
+        <button 
+          onClick={() => navigate('/auth-test')}
+          className="w-full bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white py-3 rounded-full shadow-lg transition transform hover:scale-105 text-sm"
+        >
+          🔐 Test Authentication Flow
         </button>
       </motion.div>
     </div>

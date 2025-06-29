@@ -58,7 +58,7 @@ const SignupBox = () => {
       window.dispatchEvent(new Event('authChange'));
       
       setTimeout(() => {
-        window.location.href = '/dashboard';
+        navigate('/dashboard');
       }, 1000);
       
     } catch (err) {

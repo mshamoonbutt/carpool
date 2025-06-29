@@ -4,6 +4,8 @@ import LoginBox from './pages/LoginBox.jsx';
 import SignupBox from './pages/SignupBox.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import TestPage from './pages/TestPage.jsx';
+import ProtectedRoute from './components/auth/ProtectedRoute.jsx';
+import PublicRoute from './components/auth/PublicRoute.jsx';
 
 // Error component for router
 const ErrorPage = () => (
@@ -29,22 +31,38 @@ export const router = createBrowserRouter([
   },
   {
     path: '/login',
-    element: <LoginBox />,
+    element: (
+      <PublicRoute>
+        <LoginBox />
+      </PublicRoute>
+    ),
     errorElement: <ErrorPage />
   },
   {
     path: '/signup',
-    element: <SignupBox />,
+    element: (
+      <PublicRoute>
+        <SignupBox />
+      </PublicRoute>
+    ),
     errorElement: <ErrorPage />
   },
   {
     path: '/dashboard',
-    element: <Dashboard />,
+    element: (
+      <ProtectedRoute>
+        <Dashboard />
+      </ProtectedRoute>
+    ),
     errorElement: <ErrorPage />
   },
   {
     path: '/test',
-    element: <TestPage />,
+    element: (
+      <ProtectedRoute>
+        <TestPage />
+      </ProtectedRoute>
+    ),
     errorElement: <ErrorPage />
   }
 ]);
