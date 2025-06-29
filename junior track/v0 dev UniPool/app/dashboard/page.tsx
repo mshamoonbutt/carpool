@@ -6,16 +6,28 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Car, Users, Plus, Search, Star, MapPin, Clock, UserIcon, LogOut, AlertCircle } from "lucide-react"
+import { Car, Users, Plus, Search, Star, MapPin, Clock, UserIcon, LogOut, AlertCircle, Navigation } from "lucide-react"
 import { AuthService } from "@/services/AuthService"
 import { RideService } from "@/services/RideService"
 import { BookingService } from "@/services/BookingService"
+import { mapService } from "@/services/MapService"
 import { apiConfig } from "@/utils/apiConfig"
+import { CurrentLocation, MapMarker } from "@/types/map"
 import dynamic from "next/dynamic"
 
 // Import API Health Indicator with no SSR
 const ApiHealthIndicator = dynamic(() => import("@/components/ApiHealthIndicator"), {
   ssr: false,
+});
+
+// Dynamic import for map component
+const MapboxMap = dynamic(() => import("@/components/map/MapboxMap"), {
+  ssr: false,
+  loading: () => (
+    <div className="h-full flex items-center justify-center bg-gray-100 rounded-lg">
+      <div className="text-gray-600">Loading map...</div>
+    </div>
+  )
 });
 
 export default function DashboardPage() {
@@ -24,6 +36,9 @@ export default function DashboardPage() {
   const [myBookings, setMyBookings] = useState<any[]>([])
   const [availableRides, setAvailableRides] = useState<any[]>([])
   const [isApiOnline, setIsApiOnline] = useState(apiConfig.isApiOnline)
+  const [currentLocation, setCurrentLocation] = useState<CurrentLocation | null>(null)
+  const [mapMarkers, setMapMarkers] = useState<MapMarker[]>([])
+  const [isLoadingLocation, setIsLoadingLocation] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -48,11 +63,24 @@ export default function DashboardPage() {
     
     checkAndSetApiStatus()
     loadDashboardData(currentUser.id)
+    getCurrentLocation()
     
     // Set up an interval to check API status periodically
     const interval = setInterval(checkAndSetApiStatus, 30000)
     return () => clearInterval(interval)
   }, [router])
+
+  const getCurrentLocation = async () => {
+    try {
+      setIsLoadingLocation(true)
+      const location = await mapService.getCurrentLocation()
+      setCurrentLocation(location)
+    } catch (error) {
+      console.error("Error getting current location:", error)
+    } finally {
+      setIsLoadingLocation(false)
+    }
+  }
 
   const loadDashboardData = async (userId) => {
     try {
@@ -75,9 +103,22 @@ export default function DashboardPage() {
         (a, b) => new Date(a.departureTime).getTime() - new Date(b.departureTime).getTime()
       );
       setAvailableRides(sortedAvailable.slice(0, 5));
+
+      // Update map markers
+      updateMapMarkers(sortedAvailable.slice(0, 5));
     } catch (error) {
       console.error("Error loading dashboard data:", error);
     }
+  }
+
+  const updateMapMarkers = (rides: any[]) => {
+    const markers = rides.map((ride, index) => ({
+      coordinates: [ride.originLng || 74.331627, ride.originLat || 31.522381],
+      title: `${ride.driver?.name || 'Driver'} - ${ride.origin} to ${ride.destination}`,
+      color: '#3B82F6',
+      description: `Departure: ${new Date(ride.departureTime).toLocaleString()}`
+    }));
+    setMapMarkers(markers);
   }
 
   const handleLogout = () => {
@@ -198,198 +239,198 @@ export default function DashboardPage() {
               <div className="flex items-center space-x-2">
                 <MapPin className="h-8 w-8 text-black" />
                 <div>
-                  <p className="text-2xl font-bold">{user.rideCount || 0}</p>
-                  <p className="text-sm text-gray-600">Total Rides</p>
+                  <p className="text-2xl font-bold">{availableRides.length}</p>
+                  <p className="text-sm text-gray-600">Nearby Rides</p>
                 </div>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Quick Actions */}
-        <div className="flex flex-wrap gap-4 mb-8">
-          {(user.role === "driver" || user.role === "both") && (
-            <Button onClick={() => router.push("/rides/create")} className="bg-black text-white hover:bg-gray-800">
-              <Plus className="h-4 w-4 mr-2" />
-              Post a Ride
-            </Button>
-          )}
-          {(user.role === "rider" || user.role === "both") && (
-            <Button onClick={() => router.push("/rides/search")} variant="outline">
-              <Search className="h-4 w-4 mr-2" />
-              Find a Ride
-            </Button>
-          )}
-        </div>
-
-        {/* Main Content */}
-        <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            {(user.role === "driver" || user.role === "both") && <TabsTrigger value="my-rides">My Rides</TabsTrigger>}
-            {(user.role === "rider" || user.role === "both") && (
-              <TabsTrigger value="my-bookings">My Bookings</TabsTrigger>
-            )}
-          </TabsList>
-
-          <TabsContent value="overview" className="space-y-6">
-            {/* Available Rides */}
+        {/* Main Content with Map */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          {/* Map Widget */}
+          <div className="lg:col-span-2">
             <Card>
               <CardHeader>
-                <CardTitle>Available Rides</CardTitle>
-                <CardDescription>Recent rides you might be interested in</CardDescription>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center space-x-2">
+                      <MapPin className="h-5 w-5" />
+                      <span>Nearby Rides</span>
+                    </CardTitle>
+                    <CardDescription>
+                      {currentLocation ? 
+                        `Your location: ${currentLocation.lat.toFixed(4)}, ${currentLocation.lng.toFixed(4)}` : 
+                        "Enable location to see nearby rides"
+                      }
+                    </CardDescription>
+                  </div>
+                  <Button
+                    onClick={getCurrentLocation}
+                    disabled={isLoadingLocation}
+                    variant="outline"
+                    size="sm"
+                    className="flex items-center space-x-2"
+                  >
+                    <Navigation className="h-4 w-4" />
+                    <span>{currentLocation ? 'Update' : 'Enable'} GPS</span>
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
-                {availableRides.length === 0 ? (
-                  <p className="text-gray-500 text-center py-8">No available rides at the moment</p>
+                <div className="h-[400px]">
+                  <MapboxMap
+                    currentLocation={currentLocation}
+                    markers={mapMarkers}
+                    className="h-full"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Quick Actions */}
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Quick Actions</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <Button 
+                  onClick={() => router.push("/rides/search")} 
+                  className="w-full justify-start"
+                >
+                  <Search className="h-4 w-4 mr-2" />
+                  Find a Ride
+                </Button>
+                <Button 
+                  onClick={() => router.push("/rides/create")} 
+                  variant="outline" 
+                  className="w-full justify-start"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Post a Ride
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Recent Activity */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Recent Activity</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {myBookings.length === 0 && myRides.length === 0 ? (
+                  <p className="text-gray-500 text-sm">No recent activity</p>
                 ) : (
-                  <div className="space-y-4">
-                    {availableRides.map((ride) => (
-                      <div
-                        key={ride.id}
-                        className="flex items-center justify-between p-4 border border-gray-200 rounded-lg"
-                      >
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-2 mb-2">
-                            <MapPin className="h-4 w-4 text-gray-500" />
-                            <span className="font-medium">{ride.pickupArea} → {ride.destination}</span>
-                            <Badge variant="outline">{ride.availableSeats} seats</Badge>
-                          </div>
-                          <div className="flex items-center space-x-4 text-sm text-gray-600">
-                            <div className="flex items-center space-x-1">
-                              <Clock className="h-4 w-4" />
-                              <span>
-                                {formatDate(ride.departureTime)} at {formatTime(ride.departureTime)}
-                              </span>
-                            </div>
-                            <span>by {ride.driverName}</span>
-                          </div>
+                  <div className="space-y-3">
+                    {myBookings.slice(0, 3).map((booking) => (
+                      <div key={booking.id} className="flex items-center space-x-3 p-2 bg-gray-50 rounded">
+                        <Users className="h-4 w-4 text-blue-600" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">
+                            Booked ride to {booking.ride?.destination}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {formatDate(booking.createdAt)}
+                          </p>
                         </div>
-                        <Button size="sm" onClick={() => router.push(`/rides/${ride.id}`)} variant="outline">
-                          View Details
-                        </Button>
+                      </div>
+                    ))}
+                    {myRides.slice(0, 3).map((ride) => (
+                      <div key={ride.id} className="flex items-center space-x-3 p-2 bg-gray-50 rounded">
+                        <Car className="h-4 w-4 text-green-600" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">
+                            Posted ride to {ride.destination}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {formatDate(ride.createdAt)}
+                          </p>
+                        </div>
                       </div>
                     ))}
                   </div>
                 )}
               </CardContent>
             </Card>
-          </TabsContent>
+          </div>
+        </div>
 
-          {(user.role === "driver" || user.role === "both") && (
-            <TabsContent value="my-rides" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>My Posted Rides</CardTitle>
-                  <CardDescription>Rides you've created</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {myRides.length === 0 ? (
-                    <div className="text-center py-8">
-                      <p className="text-gray-500 mb-4">You haven't posted any rides yet</p>
-                      <Button onClick={() => router.push("/rides/create")}>
-                        <Plus className="h-4 w-4 mr-2" />
-                        Post Your First Ride
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {myRides.map((ride) => (
-                        <div
-                          key={ride.id}
-                          className="flex items-center justify-between p-4 border border-gray-200 rounded-lg"
-                        >
-                          <div className="flex-1">
-                            <div className="flex items-center space-x-2 mb-2">
-                              <MapPin className="h-4 w-4 text-gray-500" />
-                              <span className="font-medium">
-                                {ride.pickupArea} → {ride.destination}
-                              </span>
-                              <Badge variant={ride.status === "active" ? "default" : "secondary"}>{ride.status}</Badge>
-                            </div>
-                            <div className="flex items-center space-x-4 text-sm text-gray-600">
-                              <div className="flex items-center space-x-1">
-                                <Clock className="h-4 w-4" />
-                                <span>
-                                  {formatDate(ride.departureTime)} at {formatTime(ride.departureTime)}
-                                </span>
-                              </div>
-                              <span>{ride.availableSeats} seats available</span>
-                            </div>
+        {/* Available Rides */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Available Rides</CardTitle>
+                <CardDescription>
+                  Rides available in your area
+                </CardDescription>
+              </div>
+              <Button 
+                onClick={() => router.push("/rides/search")} 
+                variant="outline"
+              >
+                View All
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {availableRides.length === 0 ? (
+              <div className="text-center py-8">
+                <Car className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-600">No rides available right now</p>
+                <Button 
+                  onClick={() => router.push("/rides/create")} 
+                  className="mt-4"
+                >
+                  Post a Ride
+                </Button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {availableRides.map((ride) => (
+                  <Card key={ride.id} className="cursor-pointer hover:shadow-md transition-shadow">
+                    <CardContent className="p-4">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <h4 className="font-medium text-gray-900">{ride.driver?.name}</h4>
+                          <div className="flex items-center space-x-1 text-sm text-gray-600">
+                            <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                            <span>{ride.driver?.rating || 4.5}</span>
                           </div>
-                          <Button size="sm" onClick={() => router.push(`/rides/${ride.id}`)} variant="outline">
-                            Manage
-                          </Button>
                         </div>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-          )}
-
-          {(user.role === "rider" || user.role === "both") && (
-            <TabsContent value="my-bookings" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>My Bookings</CardTitle>
-                  <CardDescription>Rides you've booked</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {myBookings.length === 0 ? (
-                    <div className="text-center py-8">
-                      <p className="text-gray-500 mb-4">You haven't booked any rides yet</p>
-                      <Button onClick={() => router.push("/rides/search")}>
-                        <Search className="h-4 w-4 mr-2" />
-                        Find Your First Ride
+                        <Badge variant="secondary">Free</Badge>
+                      </div>
+                      <div className="space-y-1 text-sm text-gray-600">
+                        <div className="flex items-center space-x-2">
+                          <MapPin className="h-4 w-4" />
+                          <span>{ride.origin} → {ride.destination}</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Clock className="h-4 w-4" />
+                          <span>{formatDate(ride.departureTime)} at {formatTime(ride.departureTime)}</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Users className="h-4 w-4" />
+                          <span>{ride.availableSeats} seats available</span>
+                        </div>
+                      </div>
+                      <Button
+                        onClick={() => router.push(`/rides/${ride.id}`)}
+                        className="w-full mt-3"
+                        size="sm"
+                      >
+                        View Details
                       </Button>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {myBookings.map((booking) => (
-                        <div
-                          key={booking.id}
-                          className="flex items-center justify-between p-4 border border-gray-200 rounded-lg"
-                        >
-                          <div className="flex-1">
-                            <div className="flex items-center space-x-2 mb-2">
-                              <MapPin className="h-4 w-4 text-gray-500" />
-                              <span className="font-medium">
-                                {booking.pickupPoint} → {booking.dropoffPoint}
-                              </span>
-                              <Badge 
-                                variant={
-                                  booking.status === "confirmed" ? "default" : 
-                                  booking.status === "pending" ? "outline" :
-                                  booking.status === "rejected" ? "destructive" : "secondary"
-                                }
-                              >
-                                {booking.status}
-                              </Badge>
-                            </div>
-                            <div className="flex items-center space-x-4 text-sm text-gray-600">
-                              <div className="flex items-center space-x-1">
-                                <Clock className="h-4 w-4" />
-                                <span>
-                                  {formatDate(booking.departureTime)} at {formatTime(booking.departureTime)}
-                                </span>
-                              </div>
-                              <span>with {booking.driverName}</span>
-                            </div>
-                          </div>
-                          <Button size="sm" onClick={() => router.push(`/rides/${booking.rideId}`)} variant="outline">
-                            View Details
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-          )}
-        </Tabs>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   )
