@@ -55,7 +55,7 @@ export class RideService {
         "Status:",
         error.response?.status
       );
-
+      
       throw new Error(
         error.response?.data?.detail ||
           "Failed to create ride. Make sure you're logged in with a valid token and have driver permissions."
@@ -270,38 +270,29 @@ export class RideService {
         status:
           apiRide.status === "scheduled"
             ? "active"
-            : ((apiRide.status === "completed" ? "completed" : "cancelled") as
-                | "active"
-                | "completed"
-                | "cancelled"),
+            : ((apiRide.status === "completed"
+                ? "completed"
+                : "cancelled") as "active" | "completed" | "cancelled"),
         isRecurring: false, // API might not have this field
         createdAt: apiRide.created_at,
       }));
 
       // Sort by departure time (newest first)
       rides.sort(
-        (a, b) =>
-          new Date(b.departureTime).getTime() -
+        (a, b) => 
+          new Date(b.departureTime).getTime() - 
           new Date(a.departureTime).getTime()
       );
 
-      console.log(
-        `✅ Fetched ${rides.length} rides for user ${userId} from API`
-      );
+      console.log(`✅ Fetched ${rides.length} rides for user ${userId} from API`);
       return rides;
     } catch (error) {
-      console.error(
-        `Failed to fetch rides for user ${userId} from API:`,
-        error
-      );
+      console.error(`Failed to fetch rides for user ${userId} from API:`, error);
       throw new Error(`Failed to load your rides. Please try again later.`);
     }
   }
 
-  static async updateRide(
-    rideId: string,
-    data: Partial<CreateRideData>
-  ): Promise<Ride | null> {
+  static async updateRide(rideId: string, data: Partial<CreateRideData>): Promise<Ride | null> {
     try {
       console.log(`Updating ride ${rideId} via API...`);
       // Prepare API data
@@ -314,10 +305,7 @@ export class RideService {
       if (data.notes) apiRideData.description = data.notes;
 
       // Update ride via API
-      const apiRide = await ApiRideService.updateRide(
-        parseInt(rideId),
-        apiRideData
-      );
+      const apiRide = await ApiRideService.updateRide(parseInt(rideId), apiRideData);
 
       if (!apiRide) return null;
 
@@ -348,10 +336,7 @@ export class RideService {
       return ride;
     } catch (error: any) {
       console.error(`Failed to update ride ${rideId} via API:`, error);
-      throw new Error(
-        error.response?.data?.detail ||
-          `Failed to update ride. Please try again later.`
-      );
+      throw new Error(error.response?.data?.detail || `Failed to update ride. Please try again later.`);
     }
   }
 
@@ -363,10 +348,7 @@ export class RideService {
       console.log(`✅ Cancelled ride ${rideId} via API`);
     } catch (error: any) {
       console.error(`Failed to cancel ride ${rideId} via API:`, error);
-      throw new Error(
-        error.response?.data?.detail ||
-          `Failed to cancel ride. Please try again later.`
-      );
+      throw new Error(error.response?.data?.detail || `Failed to cancel ride. Please try again later.`);
     }
   }
 }

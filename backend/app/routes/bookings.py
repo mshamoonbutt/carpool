@@ -49,7 +49,8 @@ def create_booking(
     db_booking = Booking(
         ride_id=booking.ride_id,
         passenger_id=current_user.id,
-        seats=booking.seats
+        seats=booking.seats,
+        status="pending"  # Set the default status to pending
     )
     
     db.add(db_booking)
@@ -176,6 +177,102 @@ def update_booking_status(
     db.refresh(booking)
     
     # Return booking with relationships loaded
+    result = db.query(Booking).options(
+        joinedload(Booking.passenger),
+        joinedload(Booking.ride).joinedload(Ride.driver)
+    ).filter(Booking.id == booking_id).first()
+    
+    return result
+
+@router.put("/{booking_id}/approve", response_model=BookingResponse)
+def approve_booking(
+    booking_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Approve a booking request (driver only)"""
+    # Get the booking with relationships loaded
+    booking = db.query(Booking).options(
+        joinedload(Booking.ride)
+    ).filter(Booking.id == booking_id).first()
+    
+    if not booking:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Booking not found"
+        )
+    
+    # Check if the current user is the driver of this ride
+    ride = booking.ride
+    if ride.driver_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only the ride driver can approve bookings"
+        )
+    
+    # Check if booking is in a pending state
+    if booking.status != "pending":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Booking is already {booking.status}"
+        )
+    
+    # Update booking status
+    booking.status = "confirmed"
+    db.commit()
+    db.refresh(booking)
+    
+    # Return with relationships loaded
+    result = db.query(Booking).options(
+        joinedload(Booking.passenger),
+        joinedload(Booking.ride).joinedload(Ride.driver)
+    ).filter(Booking.id == booking_id).first()
+    
+    return result
+
+@router.put("/{booking_id}/reject", response_model=BookingResponse)
+def reject_booking(
+    booking_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Reject a booking request (driver only)"""
+    # Get the booking with relationships loaded
+    booking = db.query(Booking).options(
+        joinedload(Booking.ride)
+    ).filter(Booking.id == booking_id).first()
+    
+    if not booking:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Booking not found"
+        )
+    
+    # Check if the current user is the driver of this ride
+    ride = booking.ride
+    if ride.driver_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only the ride driver can reject bookings"
+        )
+    
+    # Check if booking is in a pending state
+    if booking.status != "pending":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Booking is already {booking.status}"
+        )
+    
+    # Update booking status
+    booking.status = "rejected"
+    
+    # Restore available seats in the ride
+    ride.available_seats += booking.seats
+    
+    db.commit()
+    db.refresh(booking)
+    
+    # Return with relationships loaded
     result = db.query(Booking).options(
         joinedload(Booking.passenger),
         joinedload(Booking.ride).joinedload(Ride.driver)

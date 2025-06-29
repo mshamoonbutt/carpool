@@ -78,14 +78,25 @@ export const checkApiHealth = async (): Promise<boolean> => {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 3000);
 
-    const response = await fetch(`${apiConfig.baseUrl}`, {
+    // Use the root API endpoint for health check
+    const response = await fetch(`${apiConfig.baseUrl.replace(/\/api$/, "")}`, {
       signal: controller.signal,
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
     });
 
     clearTimeout(timeoutId);
 
-    apiConfig.isApiOnline = response.ok;
-    return response.ok;
+    // Try to parse the response to verify it's a proper API endpoint
+    const data = await response.json();
+    const isValidApi = response.ok && data && (data.message || data.status);
+
+    apiConfig.isApiOnline = isValidApi;
+    console.log("API health check result:", isValidApi ? "online" : "offline");
+    return isValidApi;
   } catch (error) {
     console.error("API health check failed:", error);
     apiConfig.isApiOnline = false;

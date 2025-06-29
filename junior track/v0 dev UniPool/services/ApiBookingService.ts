@@ -128,4 +128,42 @@ export class ApiBookingService {
       );
     }
   }
+
+  static async approveBooking(bookingId: number): Promise<Booking | null> {
+    try {
+      const response = await axios.put<Booking>(
+        `${API_URL}/bookings/${bookingId}/approve`,
+        {},
+        this.getAuthHeaders()
+      );
+      return response.data;
+    } catch (error: any) {
+      console.error(
+        "Approve booking error:",
+        error.response?.data || error.message
+      );
+      throw new Error(
+        error.response?.data?.detail || "Failed to approve booking"
+      );
+    }
+  }
+
+  static async rejectBooking(bookingId: number): Promise<Booking | null> {
+    try {
+      const response = await axios.put<Booking>(
+        `${API_URL}/bookings/${bookingId}/reject`,
+        {},
+        this.getAuthHeaders()
+      );
+      return response.data;
+    } catch (error: any) {
+      console.error(
+        "Reject booking error:",
+        error.response?.data || error.message
+      );
+      throw new Error(
+        error.response?.data?.detail || "Failed to reject booking"
+      );
+    }
+  }
 }

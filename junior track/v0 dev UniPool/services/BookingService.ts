@@ -48,18 +48,28 @@ export class BookingService {
               ? "confirmed"
               : apiBooking.status === "cancelled"
               ? "cancelled"
-              : ("pending" as any),
+              : apiBooking.status === "completed"
+              ? "completed"
+              : "pending",
           createdAt: apiBooking.created_at,
         };
 
         console.log(`✅ Created booking via API with ID: ${booking.id}`);
         return booking;
-      } catch (error) {
-        console.warn(
-          "API createBooking failed, falling back to localStorage:",
-          error
+      } catch (error: any) {
+        console.error(
+          "API createBooking failed:",
+          error.response?.data?.detail || error.message
         );
-        // Fall back to localStorage
+
+        // Fall back to localStorage only if specifically configured to do so
+        if (process.env.NEXT_PUBLIC_ALLOW_FALLBACK === "true") {
+          console.log("Using localStorage fallback for booking creation");
+        } else {
+          throw new Error(
+            error.response?.data?.detail || "Failed to create booking"
+          );
+        }
       }
     }
 
@@ -101,7 +111,7 @@ export class BookingService {
             dropoffPoint: data.dropoffPoint,
             departureTime: ride.departureTime,
             driverName: ride.driverName,
-            status: "confirmed",
+            status: "pending", // Set as pending by default
             createdAt: new Date().toISOString(),
           };
 
@@ -150,7 +160,9 @@ export class BookingService {
               ? "confirmed"
               : apiBooking.status === "cancelled"
               ? "cancelled"
-              : ("pending" as any),
+              : apiBooking.status === "completed"
+              ? "completed"
+              : "pending",
           createdAt: apiBooking.created_at,
         }));
 
@@ -165,12 +177,18 @@ export class BookingService {
             new Date(a.departureTime).getTime()
         );
         return bookings;
-      } catch (error) {
-        console.warn(
-          `API getUserBookings failed for ${userId}, falling back to localStorage:`,
-          error
+      } catch (error: any) {
+        console.error(
+          `API getUserBookings failed for ${userId}:`,
+          error.response?.data?.detail || error.message
         );
-        // Fall back to localStorage
+
+        // Fall back to localStorage only if specifically configured to do so
+        if (process.env.NEXT_PUBLIC_ALLOW_FALLBACK === "true") {
+          console.log("Using localStorage fallback for getUserBookings");
+        } else {
+          return []; // Return empty array when API fails and fallback disabled
+        }
       }
     }
 
@@ -195,6 +213,61 @@ export class BookingService {
   }
 
   static async getRideBookings(rideId: string): Promise<Booking[]> {
+    const isApiOnline = await checkApiHealth();
+
+    if (isApiOnline) {
+      try {
+        console.log(`Fetching bookings for ride ${rideId} from API...`);
+        // Try to get ride bookings from API using driver endpoint
+        // This will get all bookings for all rides where the user is the driver
+        const apiBookings = await ApiBookingService.getBookingsAsDriver();
+
+        // Filter to get just the bookings for the specified ride
+        const rideApiBookings = apiBookings.filter(
+          (booking) => booking.ride_id.toString() === rideId
+        );
+
+        // Convert API bookings to local format
+        const bookings: Booking[] = rideApiBookings.map((apiBooking: any) => ({
+          id: apiBooking.id.toString(),
+          rideId: apiBooking.ride_id.toString(),
+          riderId: apiBooking.passenger_id.toString(),
+          riderName: apiBooking.passenger.name,
+          pickupPoint: apiBooking.ride.origin,
+          dropoffPoint: apiBooking.ride.destination,
+          departureTime: apiBooking.ride.departure_time,
+          driverName: apiBooking.ride.driver.name,
+          status:
+            apiBooking.status === "confirmed"
+              ? "confirmed"
+              : apiBooking.status === "cancelled"
+              ? "cancelled"
+              : apiBooking.status === "completed"
+              ? "completed"
+              : "pending",
+          createdAt: apiBooking.created_at,
+        }));
+
+        console.log(
+          `✅ Fetched ${bookings.length} bookings for ride ${rideId} from API`
+        );
+        return bookings;
+      } catch (error: any) {
+        console.error(
+          `API getRideBookings failed for ${rideId}:`,
+          error.response?.data?.detail || error.message
+        );
+
+        // Fall back to localStorage only if specifically configured to do so
+        if (process.env.NEXT_PUBLIC_ALLOW_FALLBACK === "true") {
+          console.log("Using localStorage fallback for getRideBookings");
+        } else {
+          return []; // Return empty array when API fails and fallback disabled
+        }
+      }
+    }
+
+    // If API is not available or fallback is enabled, use localStorage
     return new Promise((resolve) => {
       setTimeout(() => {
         const bookings = this.getAllBookings();
@@ -202,6 +275,114 @@ export class BookingService {
           (booking) => booking.rideId === rideId
         );
         resolve(rideBookings);
+      }, 100);
+    });
+  }
+
+  static async approveBooking(bookingId: string): Promise<boolean> {
+    const isApiOnline = await checkApiHealth();
+
+    if (isApiOnline) {
+      try {
+        console.log(`Approving booking with ID: ${bookingId} via API...`);
+        // Try to approve booking via API
+        const apiBooking = await ApiBookingService.updateBookingStatus(
+          parseInt(bookingId),
+          "confirmed"
+        );
+        console.log(`✅ Booking ${bookingId} approved via API`);
+        return true;
+      } catch (error: any) {
+        console.error(
+          `API approveBooking failed for ${bookingId}:`,
+          error.response?.data?.detail || error.message
+        );
+
+        // Fall back to localStorage only if specifically configured to do so
+        if (process.env.NEXT_PUBLIC_ALLOW_FALLBACK === "true") {
+          console.log("Using localStorage fallback for approveBooking");
+        } else {
+          throw new Error(
+            error.response?.data?.detail || "Failed to approve booking"
+          );
+        }
+      }
+    }
+
+    // If API is not available or fallback is enabled, use localStorage
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const bookings = this.getAllBookings();
+        const index = bookings.findIndex((b) => b.id === bookingId);
+
+        if (index !== -1) {
+          // Update booking status to confirmed
+          bookings[index].status = "confirmed";
+          localStorage.setItem(this.STORAGE_KEY, JSON.stringify(bookings));
+          console.log(`✅ Booking ${bookingId} approved in localStorage`);
+          resolve(true);
+        } else {
+          resolve(false);
+        }
+      }, 100);
+    });
+  }
+
+  static async rejectBooking(bookingId: string): Promise<boolean> {
+    const isApiOnline = await checkApiHealth();
+
+    if (isApiOnline) {
+      try {
+        console.log(`Rejecting booking with ID: ${bookingId} via API...`);
+        // Try to reject booking via API
+        const apiBooking = await ApiBookingService.updateBookingStatus(
+          parseInt(bookingId),
+          "cancelled"
+        );
+        console.log(`✅ Booking ${bookingId} rejected via API`);
+        return true;
+      } catch (error: any) {
+        console.error(
+          `API rejectBooking failed for ${bookingId}:`,
+          error.response?.data?.detail || error.message
+        );
+
+        // Fall back to localStorage only if specifically configured to do so
+        if (process.env.NEXT_PUBLIC_ALLOW_FALLBACK === "true") {
+          console.log("Using localStorage fallback for rejectBooking");
+        } else {
+          throw new Error(
+            error.response?.data?.detail || "Failed to reject booking"
+          );
+        }
+      }
+    }
+
+    // If API is not available or fallback is enabled, use localStorage
+    return new Promise(async (resolve) => {
+      setTimeout(async () => {
+        const bookings = this.getAllBookings();
+        const index = bookings.findIndex((b) => b.id === bookingId);
+
+        if (index !== -1) {
+          const booking = bookings[index];
+          // Update booking status to rejected
+          booking.status = "rejected";
+          localStorage.setItem(this.STORAGE_KEY, JSON.stringify(bookings));
+
+          // Update ride available seats (restore seats)
+          const ride = await RideService.getRideById(booking.rideId);
+          if (ride) {
+            await RideService.updateRide(booking.rideId, {
+              availableSeats: ride.availableSeats + 1, // Assuming 1 seat per booking
+            });
+          }
+
+          console.log(`✅ Booking ${bookingId} rejected in localStorage`);
+          resolve(true);
+        } else {
+          resolve(false);
+        }
       }, 100);
     });
   }

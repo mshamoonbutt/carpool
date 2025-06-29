@@ -2,8 +2,13 @@
 'use client';
 
 import RideList from '@/components/RideList';
+import { useEffect, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { AuthService } from '@/services/AuthService';
 
 export default function SearchRidesPage() {
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto py-8 px-4">

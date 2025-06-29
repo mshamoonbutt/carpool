@@ -19,10 +19,10 @@ const ApiHealthIndicator = dynamic(() => import("@/components/ApiHealthIndicator
 });
 
 export default function DashboardPage() {
-  const [user, setUser] = useState(null)
-  const [myRides, setMyRides] = useState([])
-  const [myBookings, setMyBookings] = useState([])
-  const [availableRides, setAvailableRides] = useState([])
+  const [user, setUser] = useState<any>(null)
+  const [myRides, setMyRides] = useState<any[]>([])
+  const [myBookings, setMyBookings] = useState<any[]>([])
+  const [availableRides, setAvailableRides] = useState<any[]>([])
   const [isApiOnline, setIsApiOnline] = useState(apiConfig.isApiOnline)
   const router = useRouter()
 
@@ -56,17 +56,27 @@ export default function DashboardPage() {
 
   const loadDashboardData = async (userId) => {
     try {
-      // Check API status before loading data
+      console.log("Loading dashboard data for user:", userId);
+      
+      // Load data from API
       const [rides, bookings, available] = await Promise.all([
         RideService.getUserRides(userId),
         BookingService.getUserBookings(userId),
         RideService.getAvailableRides(userId),
-      ])
-      setMyRides(rides)
-      setMyBookings(bookings)
-      setAvailableRides(available.slice(0, 5)) // Show top 5 available rides
+      ]);
+      
+      console.log(`Dashboard data loaded: ${rides.length} rides, ${bookings.length} bookings, ${available.length} available rides`);
+      
+      setMyRides(rides);
+      setMyBookings(bookings);
+      
+      // Show top 5 available rides, sorted by departure time
+      const sortedAvailable = [...available].sort(
+        (a, b) => new Date(a.departureTime).getTime() - new Date(b.departureTime).getTime()
+      );
+      setAvailableRides(sortedAvailable.slice(0, 5));
     } catch (error) {
-      console.error("Error loading dashboard data:", error)
+      console.error("Error loading dashboard data:", error);
     }
   }
 
@@ -75,7 +85,7 @@ export default function DashboardPage() {
     router.push("/")
   }
 
-  const formatTime = (dateString) => {
+  const formatTime = (dateString: string) => {
     return new Date(dateString).toLocaleTimeString("en-US", {
       hour: "2-digit",
       minute: "2-digit",
@@ -83,7 +93,7 @@ export default function DashboardPage() {
     })
   }
 
-  const formatDate = (dateString) => {
+  const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
       weekday: "short",
       month: "short",
@@ -242,7 +252,7 @@ export default function DashboardPage() {
                         <div className="flex-1">
                           <div className="flex items-center space-x-2 mb-2">
                             <MapPin className="h-4 w-4 text-gray-500" />
-                            <span className="font-medium">{ride.pickupArea} → FCC</span>
+                            <span className="font-medium">{ride.pickupArea} → {ride.destination}</span>
                             <Badge variant="outline">{ride.availableSeats} seats</Badge>
                           </div>
                           <div className="flex items-center space-x-4 text-sm text-gray-600">
@@ -348,7 +358,13 @@ export default function DashboardPage() {
                               <span className="font-medium">
                                 {booking.pickupPoint} → {booking.dropoffPoint}
                               </span>
-                              <Badge variant={booking.status === "confirmed" ? "default" : "secondary"}>
+                              <Badge 
+                                variant={
+                                  booking.status === "confirmed" ? "default" : 
+                                  booking.status === "pending" ? "outline" :
+                                  booking.status === "rejected" ? "destructive" : "secondary"
+                                }
+                              >
                                 {booking.status}
                               </Badge>
                             </div>

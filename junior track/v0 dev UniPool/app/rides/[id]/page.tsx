@@ -395,18 +395,55 @@ export default function RideDetailsPage() {
             {isRideOwner() && bookings.length > 0 && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Current Bookings ({bookings.filter((b) => b.status === "confirmed").length})</CardTitle>
+                  <CardTitle>
+                    Current Bookings ({bookings.filter((b) => b.status === "confirmed").length} confirmed, {bookings.filter((b) => b.status === "pending").length} pending)
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
                     {bookings
-                      .filter((b) => b.status === "confirmed")
+                      .filter((b) => b.status === "confirmed" || b.status === "pending")
                       .map((booking) => (
                         <div key={booking.id} className="bg-gray-50 p-3 rounded-lg">
-                          <div className="font-medium">{booking.riderName}</div>
+                          <div className="flex items-center justify-between">
+                            <div className="font-medium">{booking.riderName}</div>
+                            <Badge variant={
+                              booking.status === "confirmed" ? "default" : 
+                              booking.status === "pending" ? "outline" : "secondary"
+                            }>
+                              {booking.status}
+                            </Badge>
+                          </div>
                           <div className="text-sm text-gray-600 mt-1">
                             {booking.pickupPoint} → {booking.dropoffPoint}
                           </div>
+                          
+                          {booking.status === "pending" && (
+                            <div className="flex gap-2 mt-3">
+                              <Button 
+                                size="sm" 
+                                variant="default"
+                                className="flex-1" 
+                                onClick={async () => {
+                                  await BookingService.approveBooking(booking.id);
+                                  loadRideDetails();
+                                }}
+                              >
+                                Approve
+                              </Button>
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                className="flex-1" 
+                                onClick={async () => {
+                                  await BookingService.rejectBooking(booking.id);
+                                  loadRideDetails();
+                                }}
+                              >
+                                Reject
+                              </Button>
+                            </div>
+                          )}
                         </div>
                       ))}
                   </div>

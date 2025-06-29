@@ -1,27 +1,23 @@
 "use client"
 import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowLeft, Users, Database, Star } from "lucide-react"
-import { UserSwitcher } from "@/components/UserSwitcher"
+import { useEffect } from "react"
 
+// This demo page is no longer used - redirect to the main dashboard
 export default function DemoPage() {
   const router = useRouter()
+  
+  useEffect(() => {
+    // Redirect to the main dashboard
+    router.replace("/dashboard")
+  }, [])
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200">
-        <div className="container mx-auto px-4 py-4 flex items-center space-x-4">
-          <Button variant="ghost" onClick={() => router.push("/")}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <div className="flex items-center space-x-2">
-            <Users className="h-6 w-6 text-black" />
-            <span className="text-xl font-bold text-black">UniPool Demo</span>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="text-center">
+        <p>Redirecting to dashboard...</p>
+      </div>
+    </div>
+  )
 
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">

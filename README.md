@@ -16,6 +16,16 @@ carpool/
     └── v0 dev UniPool/    # Next.js frontend
 ```
 
+## Quick Start
+
+For convenience, you can use the provided start script to run both the backend and frontend:
+
+```bash
+start-app.bat
+```
+
+This will start the backend server on port 8000 and the frontend on port 3000.
+
 ## Backend Setup (FastAPI)
 
 ### 1. Create a virtual environment and activate it
@@ -48,6 +58,59 @@ python main.py
 The FastAPI server will be available at `http://localhost:8000`. You can access the API documentation at `http://localhost:8000/docs`.
 
 ## Frontend Setup (Next.js)
+
+### 1. Navigate to the frontend directory
+
+```bash
+cd "junior track/v0 dev UniPool"
+```
+
+### 2. Install dependencies
+
+```bash
+npm install
+# or
+pnpm install
+```
+
+### 3. Run the development server
+
+```bash
+npm run dev
+# or
+pnpm dev
+```
+
+The frontend will be available at `http://localhost:3000`.
+
+## Backend and Frontend Integration
+
+The frontend and backend have been fully integrated. The frontend uses the backend API for all operations:
+
+1. User authentication (login/register)
+2. Ride creation, search, and management
+3. Booking creation and management
+
+By default, the frontend will attempt to connect to the backend API at `http://localhost:8000/api`. This can be configured in the `.env.local` file in the frontend directory.
+
+### Environment Configuration
+
+The frontend configuration is stored in `.env.local`:
+
+```
+NEXT_PUBLIC_API_URL=http://localhost:8000/api
+NEXT_PUBLIC_ALLOW_FALLBACK=false
+```
+
+- `NEXT_PUBLIC_API_URL`: The URL of the backend API
+- `NEXT_PUBLIC_ALLOW_FALLBACK`: If set to `true`, the frontend will fall back to localStorage if the API is unavailable. Set to `false` to force API usage and show proper error messages when the API is down.
+
+## Troubleshooting
+
+- If you encounter database errors, try running the migration script again
+- Make sure both backend and frontend are running simultaneously
+- Check if the API URL in `.env.local` matches your backend server address
+- Verify that no other applications are using the same ports (3000 for frontend, 8000 for backend)
 
 ### 1. Install dependencies
 

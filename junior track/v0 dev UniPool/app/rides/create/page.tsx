@@ -84,6 +84,11 @@ export default function CreateRidePage() {
     setLoading(true)
 
     try {
+      // Build route description
+      const routeDescription = formData.notes 
+        ? `${formData.route ? formData.route + '. ' : ''}${formData.notes}`
+        : formData.route || '';
+        
       const rideData = {
         driverId: user.id,
         driverName: user.name,
@@ -92,15 +97,27 @@ export default function CreateRidePage() {
         departureTime: departureDateTime.toISOString(),
         totalSeats: Number.parseInt(formData.totalSeats),
         route: formData.route,
-        notes: formData.notes,
+        notes: routeDescription, // Send notes as description field to API
         isRecurring: formData.isRecurring,
         recurringDays: formData.recurringDays,
       }
 
+      console.log("Submitting ride data:", rideData);
       await RideService.createRide(rideData)
+      
+      console.log("Ride created successfully!");
       router.push("/dashboard")
     } catch (err: any) {
-      setError(err.message || "Failed to create ride. Please try again.")
+      console.error("Ride creation error:", err);
+      
+      // Show a more specific error message
+      if (err.message.includes("token") || err.message.includes("log in")) {
+        setError("Please log in again to post a ride.");
+      } else if (err.message.includes("driver")) {
+        setError("Only drivers can create rides. Please update your profile.");
+      } else {
+        setError(err.message || "Failed to create ride. Please try again.");
+      }
     } finally {
       setLoading(false)
     }

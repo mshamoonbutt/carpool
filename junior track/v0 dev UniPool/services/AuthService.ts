@@ -109,9 +109,18 @@ export class AuthService {
    */
   static async resetDatabase(): Promise<void> {
     try {
-      // Clear existing data
+      // Clear existing data from all services
       localStorage.removeItem(this.DB_KEY);
       localStorage.removeItem(this.CURRENT_USER_KEY);
+
+      // Clear other service data that might contain test data
+      localStorage.removeItem("unipool_rides");
+      localStorage.removeItem("unipool_bookings");
+      localStorage.removeItem("unipool_users");
+      localStorage.removeItem("unipool_ratings");
+
+      // For good measure, also clear any SeedDataService data
+      localStorage.removeItem("unipool_seed_data");
 
       // Reinitialize
       await this.initializeDatabase();

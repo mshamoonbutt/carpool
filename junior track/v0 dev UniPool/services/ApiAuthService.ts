@@ -38,17 +38,17 @@ export class ApiAuthService {
 
   static async login(data: LoginData): Promise<User> {
     try {
-      // Format data for FastAPI OAuth2 flow
-      const formData = new FormData();
-      formData.append("username", data.email); // FastAPI uses 'username' for email
-      formData.append("password", data.password);
+      // Format data for FastAPI OAuth2 flow using URLSearchParams for proper form encoding
+      const params = new URLSearchParams();
+      params.append("username", data.email); // FastAPI uses 'username' for email
+      params.append("password", data.password);
 
       const response = await axios.post<AuthResponse>(
         `${API_URL}/users/login`,
-        formData,
+        params.toString(),
         {
           headers: {
-            "Content-Type": "multipart/form-data",
+            "Content-Type": "application/x-www-form-urlencoded",
           },
         }
       );
@@ -69,9 +69,18 @@ export class ApiAuthService {
 
   static async register(data: RegisterData): Promise<User> {
     try {
+      // Map frontend registration data to backend schema
+      const backendRegisterData = {
+        name: data.name,
+        email: data.email,
+        password: data.password,
+        phone: data.phone,
+        role: data.role,
+      };
+
       const response = await axios.post<User>(
         `${API_URL}/users/register`,
-        data
+        backendRegisterData
       );
       return response.data;
     } catch (error: any) {

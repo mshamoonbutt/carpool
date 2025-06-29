@@ -3,7 +3,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { usePolling } from '@/hooks/usePolling';
-import DataService from '@/services/DataService';
+import { RideService } from '@/services/RideService';
+import { AuthService } from '@/services/AuthService';
 
 export default function RideList({ 
   filters = {}, 
@@ -12,45 +13,55 @@ export default function RideList({
 }) {
   const [rides, setRides] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [lastUpdate, setLastUpdate] = useState(new Date());
   const [searchFilters, setSearchFilters] = useState({
-    pickup: '',
-    destination: 'FCC', // Default to FCC
+    pickupArea: '',
+    destination: 'Forman Christian College', // Default to FCC
     date: new Date().toISOString().split('T')[0], // Today's date
     timeFlexibility: '30'
   });
 
-  // Get current user (you'll need to implement this based on your auth system)
-  const getCurrentUser = () => {
-    try {
-      return JSON.parse(localStorage.getItem('currentUser'));
-    } catch {
-      return null;
-    }
-  };
-
-  const currentUser = getCurrentUser();
+  // Get current user
+  const currentUser = AuthService.getCurrentUser();
 
   // Fetch rides function for polling
   const fetchRides = async () => {
     try {
       setLoading(true);
+      setError(null);
       
       // Use filters prop or searchFilters
       const activeFilters = Object.keys(filters).length > 0 ? filters : searchFilters;
       
-      // Get all rides from DataService
-      const allRides = DataService.getRides(activeFilters);
+      // Get rides from RideService
+      let fetchedRides;
+      
+      if (activeFilters.pickupArea || activeFilters.destination || activeFilters.date) {
+        // Search rides with filters
+        fetchedRides = await RideService.searchRides(activeFilters);
+      } else {
+        // Get all rides
+        fetchedRides = await RideService.getRides();
+      }
       
       // Filter out rides created by current user (they shouldn't book their own rides)
-      const availableRides = allRides.filter(ride => 
-        ride.driverId !== currentUser?.id && ride.availableSeats > 0
+      if (currentUser) {
+        fetchedRides = fetchedRides.filter(ride => 
+          ride.driverId !== currentUser.id && ride.availableSeats > 0
+        );
+      }
+      
+      // Filter out rides in the past
+      fetchedRides = fetchedRides.filter(ride => 
+        new Date(ride.departureTime) > new Date()
       );
       
-      setRides(availableRides);
+      setRides(fetchedRides);
       setLastUpdate(new Date());
     } catch (error) {
       console.error('Error fetching rides:', error);
+      setError('Failed to load rides. Please try again later.');
     } finally {
       setLoading(false);
     }
@@ -89,11 +100,9 @@ export default function RideList({
       const pickupPoint = prompt('Enter your pickup point along the route:');
       if (!pickupPoint) return;
 
-      await DataService.bookRide(ride.id, {
-        riderId: currentUser.id,
-        riderName: currentUser.name,
-        pickupPoint
-      });
+      // Use BookingService instead of DataService
+      const { BookingService } = await import('@/services/BookingService');
+      await BookingService.createBooking(ride.id, pickupPoint);
 
       alert('Ride booked successfully!');
       // Refresh will happen automatically via polling
@@ -217,7 +226,7 @@ export default function RideList({
               <div className="flex justify-between items-start mb-4">
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900">
-                    📍 {ride.pickup} → {ride.dropoff}
+                    📍 {ride.pickupArea} → {ride.destination}
                   </h3>
                   <p className="text-sm text-gray-600">
                     🕒 {formatDateTime(ride.departureTime)}
@@ -238,42 +247,29 @@ export default function RideList({
               </div>
 
               {/* Route information */}
-              {ride.route && ride.route.length > 0 && (
+              {ride.route && (
                 <div className="mb-4">
                   <p className="text-sm font-medium mb-2">Route:</p>
                   <div className="flex flex-wrap gap-2">
-                    {ride.route.map((point, index) => (
-                      <span 
-                        key={index} 
-                        className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs"
-                      >
-                        {point}
-                      </span>
-                    ))}
+                    <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs">
+                      {ride.route}
+                    </span>
                   </div>
                 </div>
               )}
 
-              {/* Current bookings (for transparency) */}
-              {ride.bookings && ride.bookings.length > 0 && (
-                <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded">
-                  <p className="text-sm font-medium text-green-800 mb-2">
-                    Current Bookings ({ride.bookings.length}/{ride.seats}):
-                  </p>
-                  <div className="space-y-1">
-                    {ride.bookings.map((booking, index) => (
-                      <div key={index} className="text-xs bg-white px-2 py-1 rounded border">
-                        {booking.riderName} at {booking.pickupPoint}
-                      </div>
-                    ))}
-                  </div>
+              {/* Additional notes */}
+              {ride.notes && ride.notes !== ride.route && (
+                <div className="mb-4">
+                  <p className="text-sm font-medium mb-2">Notes:</p>
+                  <p className="text-sm text-gray-600">{ride.notes}</p>
                 </div>
               )}
 
               {/* Recurring ride info */}
-              {ride.recurring && ride.recurring.enabled && (
+              {ride.isRecurring && ride.recurringDays && ride.recurringDays.length > 0 && (
                 <div className="mb-4 p-2 bg-blue-50 border border-blue-200 rounded text-xs text-blue-700">
-                  🔄 Recurring ride: {ride.recurring.days.join(', ')}
+                  🔄 Recurring ride: {ride.recurringDays.join(', ')}
                 </div>
               )}
 

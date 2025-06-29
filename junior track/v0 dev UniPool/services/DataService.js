@@ -123,6 +123,7 @@ class DataService {
     
     data.rides.push(ride);
     this.saveData(data); // This will automatically notify all tabs
+    this.cleanupInvalidRides(); // Clean up after adding
     return ride;
   }
 
@@ -191,7 +192,29 @@ class DataService {
     }
   }
 
+  // Remove inaccessible/demo rides and keep only valid ones
+  cleanupInvalidRides() {
+    const data = this.getData();
+    const now = new Date();
+    // Only keep rides with required fields, valid future date, and valid seats
+    data.rides = (data.rides || []).filter(ride => {
+      if (!ride) return false;
+      const hasRequiredFields = ride.id && ride.driverId && ride.driverName && ride.departureTime && ride.pickup && ride.dropoff;
+      if (!hasRequiredFields) return false;
+      const departureTime = new Date(ride.departureTime);
+      const isValidDate = !isNaN(departureTime.getTime());
+      if (!isValidDate) return false;
+      const hasValidSeats = typeof ride.seats === 'number' && ride.seats > 0 && typeof ride.availableSeats === 'number' && ride.availableSeats >= 0 && ride.availableSeats <= ride.seats;
+      if (!hasValidSeats) return false;
+      const isFutureRide = departureTime > now;
+      const isActive = !ride.status || ride.status === "active";
+      return isFutureRide && isActive;
+    });
+    this.saveData(data);
+  }
+
   getRides(filters = {}) {
+    this.cleanupInvalidRides(); // Clean up before returning rides
     const data = this.getData();
     let rides = data.rides || [];
 

@@ -57,18 +57,57 @@ export class ApiRideService {
 
   static async createRide(data: CreateRideData): Promise<Ride> {
     try {
-      const response = await axios.post<Ride>(
-        `${API_URL}/rides`,
-        data,
-        this.getAuthHeaders()
-      );
+      console.log("Creating ride with data:", data);
+
+      // Ensure we have a valid token
+      const token = ApiAuthService.getToken();
+      if (!token) {
+        throw new Error("No authentication token found. Please log in again.");
+      }
+
+      // Add explicit Content-Type header
+      const headers = {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      };
+
+      console.log("Using headers:", headers);
+      console.log("Sending to API:", `${API_URL}/rides`);
+
+      const response = await axios.post<Ride>(`${API_URL}/rides`, data, {
+        headers,
+      });
+
+      console.log("API response success:", response.data);
       return response.data;
     } catch (error: any) {
-      console.error(
-        "Create ride error:",
-        error.response?.data || error.message
-      );
-      throw new Error(error.response?.data?.detail || "Failed to create ride");
+      // Enhanced error logging
+      console.error("Create ride API error:");
+
+      if (error.response) {
+        console.error("Status:", error.response.status);
+        console.error("Data:", error.response.data);
+        console.error("Headers:", error.response.headers);
+      } else if (error.request) {
+        console.error("No response received:", error.request);
+      } else {
+        console.error("Error:", error.message);
+      }
+      console.error("Error config:", error.config);
+
+      if (error.response?.status === 401) {
+        throw new Error("Authentication failed. Please log in again.");
+      } else if (error.response?.status === 403) {
+        throw new Error(
+          "You don't have permission to create rides. Only drivers can create rides."
+        );
+      } else if (error.response?.data?.detail) {
+        throw new Error(error.response.data.detail);
+      } else {
+        throw new Error(
+          `Failed to create ride: ${error.message}. Check your network connection and try again.`
+        );
+      }
     }
   }
 
