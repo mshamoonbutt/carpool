@@ -6,16 +6,24 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Car, Users, Plus, Search, Star, MapPin, Clock, UserIcon, LogOut } from "lucide-react"
+import { Car, Users, Plus, Search, Star, MapPin, Clock, UserIcon, LogOut, AlertCircle } from "lucide-react"
 import { AuthService } from "@/services/AuthService"
 import { RideService } from "@/services/RideService"
 import { BookingService } from "@/services/BookingService"
+import { apiConfig } from "@/utils/apiConfig"
+import dynamic from "next/dynamic"
+
+// Import API Health Indicator with no SSR
+const ApiHealthIndicator = dynamic(() => import("@/components/ApiHealthIndicator"), {
+  ssr: false,
+});
 
 export default function DashboardPage() {
   const [user, setUser] = useState(null)
   const [myRides, setMyRides] = useState([])
   const [myBookings, setMyBookings] = useState([])
   const [availableRides, setAvailableRides] = useState([])
+  const [isApiOnline, setIsApiOnline] = useState(apiConfig.isApiOnline)
   const router = useRouter()
 
   useEffect(() => {
@@ -25,11 +33,30 @@ export default function DashboardPage() {
       return
     }
     setUser(currentUser)
+    
+    // Check API status
+    const checkAndSetApiStatus = async () => {
+      try {
+        const { checkApiHealth } = await import("@/utils/apiConfig")
+        const isOnline = await checkApiHealth()
+        setIsApiOnline(isOnline)
+      } catch (error) {
+        console.error("Failed to check API status:", error)
+        setIsApiOnline(false)
+      }
+    }
+    
+    checkAndSetApiStatus()
     loadDashboardData(currentUser.id)
+    
+    // Set up an interval to check API status periodically
+    const interval = setInterval(checkAndSetApiStatus, 30000)
+    return () => clearInterval(interval)
   }, [router])
 
   const loadDashboardData = async (userId) => {
     try {
+      // Check API status before loading data
       const [rides, bookings, available] = await Promise.all([
         RideService.getUserRides(userId),
         BookingService.getUserBookings(userId),
@@ -77,6 +104,11 @@ export default function DashboardPage() {
             <span className="text-2xl font-bold text-black">UniPool</span>
           </div>
           <div className="flex items-center space-x-4">
+            {/* API Status Indicator */}
+            <div className="hidden sm:block">
+              <ApiHealthIndicator />
+            </div>
+            
             <div className="flex items-center space-x-2">
               <UserIcon className="h-5 w-5 text-gray-600" />
               <span className="text-sm font-medium">{user.name}</span>
@@ -98,6 +130,19 @@ export default function DashboardPage() {
       </header>
 
       <div className="container mx-auto px-4 py-8">
+        {/* Offline Mode Warning */}
+        {!isApiOnline && (
+          <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg flex items-center gap-3">
+            <AlertCircle className="h-5 w-5 text-amber-500" />
+            <div>
+              <h3 className="font-medium text-amber-800">Offline Mode Active</h3>
+              <p className="text-amber-700 text-sm">
+                You are currently using UniPool in offline mode with local data. Some features may be limited.
+              </p>
+            </div>
+          </div>
+        )}
+        
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card>

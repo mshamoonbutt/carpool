@@ -1,4 +1,7 @@
 // services/AuthService.ts
+import { ApiAuthService } from "./ApiAuthService";
+import { apiConfig, checkApiHealth } from "@/utils/apiConfig";
+import { withFallback } from "@/utils/apiUtils";
 
 interface User {
   id: string;
@@ -30,6 +33,16 @@ interface AuthResult {
 }
 
 export class AuthService {
+  // Check API availability on startup
+  static {
+    checkApiHealth().then((isOnline) => {
+      console.log(
+        `API is ${isOnline ? "online" : "offline"}. Using ${
+          isOnline ? "backend API" : "localStorage"
+        }.`
+      );
+    });
+  }
   // Valid email domains for FCC
   private static readonly VALID_DOMAINS = [
     "@formanite.fccollege.edu.pk", // Students
@@ -237,6 +250,43 @@ export class AuthService {
    * Login user with email verification (keeping your current signature)
    */
   static async login(email: string, password: string): Promise<User | null> {
+    // First check if API is available
+    const isApiOnline = await checkApiHealth();
+
+    if (isApiOnline) {
+      try {
+        console.log("Attempting API login...");
+        // Try to login with API first
+        const apiUser = await ApiAuthService.login({ email, password });
+
+        // Convert API user to local format
+        const user: User = {
+          id: apiUser.id.toString(),
+          email: apiUser.email,
+          name: apiUser.name,
+          role: apiUser.role as any,
+          gender: "unknown", // API might not have this field
+          phone: apiUser.phone,
+          password: "", // Don't store real password
+          userType: "student", // Default
+          ratings: {
+            driver: null,
+            rider: null,
+          },
+          createdAt: apiUser.created_at,
+        };
+
+        // Store the logged in user locally
+        this.setCurrentUser(user);
+        console.log("✅ User logged in successfully via API:", user.email);
+        return user;
+      } catch (error) {
+        console.warn("API login failed, falling back to localStorage:", error);
+        // Fall back to localStorage login
+      }
+    }
+
+    // If API is not available or failed, use localStorage
     return new Promise((resolve, reject) => {
       setTimeout(() => {
         try {
@@ -266,7 +316,10 @@ export class AuthService {
 
           // Set current user
           this.setCurrentUser(user);
-          console.log("✅ User logged in successfully:", user.email);
+          console.log(
+            "✅ User logged in successfully via localStorage:",
+            user.email
+          );
           resolve(user);
         } catch (error) {
           console.error("❌ Login error:", error);

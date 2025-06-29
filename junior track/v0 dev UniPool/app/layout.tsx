@@ -1,6 +1,7 @@
 "use client"
 
-import { useEffect } from 'react'
+import React, { useEffect, Suspense } from 'react'
+import dynamic from 'next/dynamic'
 import { Inter } from 'next/font/google'
 import { AuthService } from '@/services/AuthService'
 import './globals.css'
@@ -18,7 +19,12 @@ export default function RootLayout({
       console.log('🚀 Initializing UniPool application...')
       
       try {
-        // Initialize database with seed data
+        // Check API availability
+        const { checkApiHealth, apiConfig } = require('@/utils/apiConfig')
+        const isApiOnline = await checkApiHealth()
+        console.log(`🌐 API is ${isApiOnline ? 'online' : 'offline'}. Using ${isApiOnline ? 'backend API' : 'localStorage'}.`)
+        
+        // Initialize database with seed data (fallback)
         await AuthService.initializeDatabase()
         
         // Log database stats
@@ -47,6 +53,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
+        {/* API Status Indicator - loaded in dashboard instead */}
         {children}
       </body>
     </html>
