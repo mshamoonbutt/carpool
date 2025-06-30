@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Car, Users, Star, MapPin } from "lucide-react"
+import { Car, Users, Star, MapPin, UserCheck, Search, Map, MessageCircle } from "lucide-react"
 import { AuthService } from "@/services/AuthService"
 import { motion, useScroll, useTransform } from "framer-motion"
 import crestImg from "@/public/crest.png"
@@ -12,6 +12,7 @@ import phoneCarImg from "@/public/phone-car.png"
 import carpoolGridImg from "@/public/carpool-grid.png"
 import Image from "next/image"
 import { useMotionValue, useSpring } from "framer-motion"
+import { UniPoolLogo } from "@/components/ui/UniPoolLogo"
 
 const heroCards = [
   {
@@ -55,6 +56,30 @@ const featureHighlights = [
   }
 ]
 
+// Tutorial steps for How It Works
+const tutorialSteps = [
+  {
+    icon: <UserCheck className="w-8 h-8 text-accent" />,
+    title: "Sign Up & Verify",
+    desc: "Create your account with your FCC email."
+  },
+  {
+    icon: <Search className="w-8 h-8 text-accent" />,
+    title: "Find or Offer a Ride",
+    desc: "Browse rides or post your own."
+  },
+  {
+    icon: <Map className="w-8 h-8 text-accent" />,
+    title: "Smart Matching",
+    desc: "Get matched with students on your route."
+  },
+  {
+    icon: <MessageCircle className="w-8 h-8 text-accent" />,
+    title: "Connect & Ride",
+    desc: "Message, coordinate, and enjoy your ride!"
+  }
+]
+
 export default function HomePage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [activeCard, setActiveCard] = useState(0)
@@ -83,6 +108,10 @@ export default function HomePage() {
 
   // For card scatter/fly-away effect, use scrollY directly for each card
   const featuresScatter = useTransform(scrollY, [500, 800], [0, 1])
+
+  // Animate minHeight and background opacity of features section to bridge gap
+  const featuresSectionHeight = useTransform(scrollY, [500, 800], [480, 0])
+  const featuresBgOpacity = useTransform(scrollY, [500, 800], [1, 0])
 
   useEffect(() => {
     const user = AuthService.getCurrentUser()
@@ -113,7 +142,7 @@ export default function HomePage() {
       >
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center space-x-2">
-            <Car className="h-8 w-8 text-foreground" />
+            <UniPoolLogo size={32} className="h-8 w-8" />
             <span className="text-2xl font-bold text-foreground">UniPool</span>
           </div>
           <div className="space-x-4">
@@ -200,7 +229,7 @@ export default function HomePage() {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.3 }}
         transition={{ duration: 0.7, ease: 'easeOut' }}
-        className="py-12 px-4 bg-gradient-to-r from-background via-muted/30 to-accent/10"
+        className="py-8 px-4 bg-gradient-to-r from-background via-muted/30 to-accent/10"
       >
         <div className="container mx-auto max-w-5xl">
           <div className="mb-8 text-left">
@@ -245,69 +274,23 @@ export default function HomePage() {
       <motion.section
         ref={howItWorksRef}
         style={{ y: howY, opacity: howOpacity, zIndex: 5, position: 'relative' }}
-        className="pt-4 pb-16 px-4"
+        className="pt-2 pb-12 px-4"
       >
         <div className="container mx-auto">
-          <h2 className="text-3xl font-bold text-center text-foreground mb-12">How It Works</h2>
-          <div className="grid md:grid-cols-2 gap-12">
-            <div>
-              <h3 className="text-2xl font-bold text-foreground mb-4">For Drivers</h3>
-              <ul className="space-y-3 text-muted-foreground">
-                <li className="flex items-start">
-                  <span className="bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center text-sm mr-3 mt-0.5">
-                    1
-                  </span>
-                  Post your ride with pickup area, destination, and departure time
-                </li>
-                <li className="flex items-start">
-                  <span className="bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center text-sm mr-3 mt-0.5">
-                    2
-                  </span>
-                  Set recurring rides for your regular schedule
-                </li>
-                <li className="flex items-start">
-                  <span className="bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center text-sm mr-3 mt-0.5">
-                    3
-                  </span>
-                  Accept ride requests and coordinate pickup details
-                </li>
-                <li className="flex items-start">
-                  <span className="bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center text-sm mr-3 mt-0.5">
-                    4
-                  </span>
-                  Complete the ride and rate your passengers
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="text-2xl font-bold text-foreground mb-4">For Riders</h3>
-              <ul className="space-y-3 text-muted-foreground">
-                <li className="flex items-start">
-                  <span className="bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center text-sm mr-3 mt-0.5">
-                    1
-                  </span>
-                  Search for rides by area, destination, and time
-                </li>
-                <li className="flex items-start">
-                  <span className="bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center text-sm mr-3 mt-0.5">
-                    2
-                  </span>
-                  Request to join rides with your specific pickup point
-                </li>
-                <li className="flex items-start">
-                  <span className="bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center text-sm mr-3 mt-0.5">
-                    3
-                  </span>
-                  Get confirmation and coordinate with your driver
-                </li>
-                <li className="flex items-start">
-                  <span className="bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center text-sm mr-3 mt-0.5">
-                    4
-                  </span>
-                  Enjoy your ride and rate your driver
-                </li>
-              </ul>
-            </div>
+          <h2 className="text-3xl font-bold text-center text-foreground mb-4">How UniPool Works</h2>
+          <p className="text-center text-muted-foreground mb-10">A quick guide to getting started</p>
+          {/* Visual Tutorial */}
+          <div className="flex flex-col md:flex-row justify-center items-center gap-8 mb-12">
+            {tutorialSteps.map((step, idx) => (
+              <div key={step.title} className="flex flex-col items-center bg-card rounded-xl shadow-md p-6 w-full max-w-xs border border-border">
+                <div className="w-12 h-12 flex items-center justify-center rounded-full bg-gradient-to-br from-accent/10 to-muted/30 mb-3">
+                  {step.icon}
+                </div>
+                <div className="text-accent font-bold text-lg mb-1">Step {idx + 1}</div>
+                <div className="font-semibold text-foreground text-xl mb-1 text-center">{step.title}</div>
+                <div className="text-muted-foreground text-base text-center">{step.desc}</div>
+              </div>
+            ))}
           </div>
         </div>
       </motion.section>
@@ -316,7 +299,7 @@ export default function HomePage() {
       <footer className="bg-muted text-foreground py-8 px-4">
         <div className="container mx-auto text-center">
           <div className="flex items-center justify-center space-x-2 mb-4">
-            <Car className="h-6 w-6" />
+            <UniPoolLogo size={24} className="h-6 w-6" />
             <span className="text-xl font-bold">UniPool</span>
           </div>
           <p className="text-muted-foreground">Connecting FCC students through safe, convenient ride sharing</p>
