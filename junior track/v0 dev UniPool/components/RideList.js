@@ -119,7 +119,7 @@ export default function RideList({
     <div className="space-y-6">
       {/* Search Form (if enabled) */}
       {showSearchForm && (
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
+        <div className="bg-card p-6 rounded-lg shadow-sm border">
           <h2 className="text-xl font-semibold mb-4">Search Rides</h2>
           <form onSubmit={handleSearch} className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
@@ -127,7 +127,7 @@ export default function RideList({
               <select
                 value={searchFilters.pickup}
                 onChange={(e) => setSearchFilters({...searchFilters, pickup: e.target.value})}
-                className="w-full p-2 border rounded-lg"
+                className="w-full p-2 border rounded-lg bg-background text-foreground"
               >
                 <option value="">Any area</option>
                 <option value="DHA Phase 5">DHA Phase 5</option>
@@ -144,7 +144,7 @@ export default function RideList({
               <select
                 value={searchFilters.destination}
                 onChange={(e) => setSearchFilters({...searchFilters, destination: e.target.value})}
-                className="w-full p-2 border rounded-lg"
+                className="w-full p-2 border rounded-lg bg-background text-foreground"
               >
                 <option value="FCC">Forman Christian College</option>
               </select>
@@ -156,7 +156,7 @@ export default function RideList({
                 type="date"
                 value={searchFilters.date}
                 onChange={(e) => setSearchFilters({...searchFilters, date: e.target.value})}
-                className="w-full p-2 border rounded-lg"
+                className="w-full p-2 border rounded-lg bg-background text-foreground"
               />
             </div>
             
@@ -165,7 +165,7 @@ export default function RideList({
               <select
                 value={searchFilters.timeFlexibility}
                 onChange={(e) => setSearchFilters({...searchFilters, timeFlexibility: e.target.value})}
-                className="w-full p-2 border rounded-lg"
+                className="w-full p-2 border rounded-lg bg-background text-foreground"
               >
                 <option value="15">±15 minutes</option>
                 <option value="30">±30 minutes</option>
@@ -177,7 +177,7 @@ export default function RideList({
               <button 
                 type="submit"
                 disabled={loading}
-                className="bg-black text-white px-6 py-2 rounded-lg hover:bg-gray-800 disabled:opacity-50"
+                className="bg-primary text-primary-foreground px-6 py-2 rounded-lg hover:bg-primary/90 disabled:opacity-50"
               >
                 {loading ? 'Searching...' : 'Search Rides'}
               </button>
@@ -191,13 +191,13 @@ export default function RideList({
         <h2 className="text-2xl font-bold">
           {showSearchForm ? 'Search Results' : 'Available Rides'}
         </h2>
-        <div className="flex items-center gap-2 text-sm text-gray-500">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
           <span>Live • {lastUpdate.toLocaleTimeString()}</span>
           <button 
             onClick={refresh}
             disabled={loading}
-            className="px-2 py-1 bg-blue-500 text-white rounded text-xs hover:bg-blue-600 disabled:opacity-50"
+            className="px-2 py-1 bg-primary text-primary-foreground rounded text-xs hover:bg-primary/90 disabled:opacity-50"
           >
             {loading ? 'Updating...' : 'Refresh'}
           </button>

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+// Tabs imports removed as not currently used
 import { Car, Users, Plus, Search, Star, MapPin, Clock, UserIcon, LogOut, AlertCircle, Navigation } from "lucide-react"
 import { AuthService } from "@/services/AuthService"
 import { RideService } from "@/services/RideService"

@@ -11,12 +11,14 @@ class DataService {
 
   // NEW: Setup storage event listener for cross-tab communication
   setupStorageListener() {
-    window.addEventListener('storage', (e) => {
-      if (e.key === this.DB_KEY) {
-        // Notify all components that data has changed
-        this.notifyListeners();
-      }
-    });
+    if (typeof window !== 'undefined') {
+      window.addEventListener('storage', (e) => {
+        if (e.key === this.DB_KEY) {
+          // Notify all components that data has changed
+          this.notifyListeners();
+        }
+      });
+    }
   }
 
   // NEW: Subscribe to data changes

@@ -194,7 +194,7 @@ export default function LoginPage() {
 
           {/* Switch to Register */}
           <div className="mt-6 text-center text-sm">
-            <span className="text-gray-600">Don't have an account? </span>
+            <span className="text-gray-600">Don&apos;t have an account? </span>
             <Link href="/auth/register" className="font-medium text-black hover:underline">
               Create one here
             </Link>

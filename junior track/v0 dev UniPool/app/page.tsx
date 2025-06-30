@@ -10,17 +10,17 @@ import { motion, useScroll, useTransform } from "framer-motion"
 
 const heroCards = [
   {
-    icon: <Users className="h-12 w-12 text-[#A66CFF] mb-4" />,
+    icon: <Users className="h-12 w-12 text-accent mb-4" />,
     title: "Student Community",
     desc: "Connect with verified FCC students and faculty. Build trust through our rating system."
   },
   {
-    icon: <MapPin className="h-12 w-12 text-[#8B2E2E] mb-4" />,
+    icon: <MapPin className="h-12 w-12 text-primary mb-4" />,
     title: "Smart Matching",
     desc: "AI-powered route matching finds the best rides based on your schedule and location."
   },
   {
-    icon: <Star className="h-12 w-12 text-[#FFD54F] mb-4" />,
+    icon: <Star className="h-12 w-12 text-accent mb-4" />,
     title: "Safety First",
     desc: "Verified university emails, mutual ratings, and community guidelines ensure safe rides."
   }
@@ -57,14 +57,14 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b border-gray-200">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center space-x-2">
-            <Car className="h-8 w-8 text-black" />
-            <span className="text-2xl font-bold text-black">UniPool</span>
-          </div>
+      <header className="border-b border-border">
+                  <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div className="flex items-center space-x-2">
+              <Car className="h-8 w-8 text-foreground" />
+              <span className="text-2xl font-bold text-foreground">UniPool</span>
+            </div>
           <div className="space-x-4">
             {isLoggedIn ? (
               <>
@@ -88,14 +88,14 @@ export default function HomePage() {
       <motion.section
         ref={heroRef}
         style={{ scale: heroScale, opacity: heroOpacity }}
-        className="py-20 px-4 bg-gradient-to-br from-[#fff] via-[#f4f4f4] to-[#eae2ff] will-change-transform"
+        className="py-20 px-4 bg-gradient-to-br from-background via-muted/50 to-accent/20 will-change-transform"
       >
         <div className="container mx-auto flex flex-col md:flex-row items-center justify-between gap-10">
           <div className="flex-1 text-center md:text-left">
             <h1 className="text-5xl md:text-6xl font-extrabold fun-gradient mb-6 drop-shadow-lg leading-tight" style={{ fontWeight: 900, letterSpacing: '-0.02em' }}>
               Join the Pool, Skip the Fuel.
             </h1>
-            <p className="text-xl md:text-2xl text-gray-700 mb-8 max-w-xl mx-auto md:mx-0">
+            <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-xl mx-auto md:mx-0">
               Save fuel. Save money. Save that one guy always asking for a ride.
             </p>
             <Button onClick={handleGetStarted} size="lg" className="btn-fun px-10 py-5 text-lg shadow-xl">
@@ -104,8 +104,8 @@ export default function HomePage() {
           </div>
           <div className="flex-1 flex justify-center md:justify-end">
             {/* Illustration Placeholder - replace with SVG or image as needed */}
-            <div className="w-[320px] h-[320px] bg-gradient-to-br from-[#A66CFF]/30 to-[#8B2E2E]/20 rounded-3xl flex items-center justify-center shadow-2xl border-2 border-[#A66CFF]">
-              <Car className="h-40 w-40 text-[#A66CFF] opacity-80" />
+            <div className="w-[320px] h-[320px] bg-gradient-to-br from-accent/30 to-primary/20 rounded-3xl flex items-center justify-center shadow-2xl border-2 border-accent">
+              <Car className="h-40 w-40 text-accent opacity-80" />
             </div>
           </div>
         </div>
@@ -118,19 +118,19 @@ export default function HomePage() {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.3 }}
         transition={{ duration: 0.7, ease: 'easeOut' }}
-        className="py-16 px-4 bg-gradient-to-r from-yellow-50 via-blue-50 to-pink-50 animate-fade-in will-change-transform"
+        className="py-16 px-4 bg-gradient-to-r from-background via-muted/30 to-accent/10 animate-fade-in will-change-transform"
       >
         <div className="container mx-auto">
           <h2 className="text-3xl font-bold text-center fun-gradient mb-12 animate-fade-in">Why Choose UniPool?</h2>
           <div className="flex flex-col md:flex-row gap-8 justify-center items-stretch">
             {heroCards.map((card) => (
-              <Card key={card.title} className="flex-1 card-fun p-8 rounded-3xl shadow-2xl border-2 border-[#A66CFF] bg-gradient-to-br from-[#fff] via-[#f4f4f4] to-[#eae2ff] hover:shadow-purple-200 flex flex-col items-center">
+              <Card key={card.title} className="flex-1 card-fun p-8 rounded-3xl shadow-2xl border-2 border-accent bg-gradient-to-br from-card via-card/80 to-accent/10 hover:shadow-accent/20 flex flex-col items-center">
                 <CardHeader className="flex flex-col items-center gap-2 p-0 mb-2">
                   <div className="mb-2">{card.icon}</div>
                   <CardTitle className="fun-gradient text-2xl font-extrabold drop-shadow-md mb-1 text-center">{card.title}</CardTitle>
                 </CardHeader>
                 <CardContent className="flex flex-col items-center p-0">
-                  <CardDescription className="text-base text-[#8B2E2E] font-semibold text-center max-w-xs">{card.desc}</CardDescription>
+                  <CardDescription className="text-base text-muted-foreground font-semibold text-center max-w-xs">{card.desc}</CardDescription>
                 </CardContent>
               </Card>
             ))}
@@ -141,31 +141,31 @@ export default function HomePage() {
       {/* How It Works */}
       <section className="py-16 px-4">
         <div className="container mx-auto">
-          <h2 className="text-3xl font-bold text-center text-black mb-12">How It Works</h2>
+          <h2 className="text-3xl font-bold text-center text-foreground mb-12">How It Works</h2>
           <div className="grid md:grid-cols-2 gap-12">
-            <div>
-              <h3 className="text-2xl font-bold text-black mb-4">For Drivers</h3>
-              <ul className="space-y-3 text-gray-600">
+                          <div>
+                <h3 className="text-2xl font-bold text-foreground mb-4">For Drivers</h3>
+                <ul className="space-y-3 text-muted-foreground">
                 <li className="flex items-start">
-                  <span className="bg-black text-white rounded-full w-6 h-6 flex items-center justify-center text-sm mr-3 mt-0.5">
+                  <span className="bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center text-sm mr-3 mt-0.5">
                     1
                   </span>
                   Post your ride with pickup area, destination, and departure time
                 </li>
                 <li className="flex items-start">
-                  <span className="bg-black text-white rounded-full w-6 h-6 flex items-center justify-center text-sm mr-3 mt-0.5">
+                  <span className="bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center text-sm mr-3 mt-0.5">
                     2
                   </span>
                   Set recurring rides for your regular schedule
                 </li>
                 <li className="flex items-start">
-                  <span className="bg-black text-white rounded-full w-6 h-6 flex items-center justify-center text-sm mr-3 mt-0.5">
+                  <span className="bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center text-sm mr-3 mt-0.5">
                     3
                   </span>
                   Accept ride requests and coordinate pickup details
                 </li>
                 <li className="flex items-start">
-                  <span className="bg-black text-white rounded-full w-6 h-6 flex items-center justify-center text-sm mr-3 mt-0.5">
+                  <span className="bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center text-sm mr-3 mt-0.5">
                     4
                   </span>
                   Complete the ride and rate your passengers
@@ -173,28 +173,28 @@ export default function HomePage() {
               </ul>
             </div>
             <div>
-              <h3 className="text-2xl font-bold text-black mb-4">For Riders</h3>
-              <ul className="space-y-3 text-gray-600">
+              <h3 className="text-2xl font-bold text-foreground mb-4">For Riders</h3>
+              <ul className="space-y-3 text-muted-foreground">
                 <li className="flex items-start">
-                  <span className="bg-black text-white rounded-full w-6 h-6 flex items-center justify-center text-sm mr-3 mt-0.5">
+                  <span className="bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center text-sm mr-3 mt-0.5">
                     1
                   </span>
                   Search for rides by area, destination, and time
                 </li>
                 <li className="flex items-start">
-                  <span className="bg-black text-white rounded-full w-6 h-6 flex items-center justify-center text-sm mr-3 mt-0.5">
+                  <span className="bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center text-sm mr-3 mt-0.5">
                     2
                   </span>
                   Request to join rides with your specific pickup point
                 </li>
                 <li className="flex items-start">
-                  <span className="bg-black text-white rounded-full w-6 h-6 flex items-center justify-center text-sm mr-3 mt-0.5">
+                  <span className="bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center text-sm mr-3 mt-0.5">
                     3
                   </span>
                   Get confirmation and coordinate with your driver
                 </li>
                 <li className="flex items-start">
-                  <span className="bg-black text-white rounded-full w-6 h-6 flex items-center justify-center text-sm mr-3 mt-0.5">
+                  <span className="bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center text-sm mr-3 mt-0.5">
                     4
                   </span>
                   Enjoy your ride and rate your driver
@@ -206,13 +206,13 @@ export default function HomePage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-black text-white py-8 px-4">
+      <footer className="bg-muted text-foreground py-8 px-4">
         <div className="container mx-auto text-center">
           <div className="flex items-center justify-center space-x-2 mb-4">
             <Car className="h-6 w-6" />
             <span className="text-xl font-bold">UniPool</span>
           </div>
-          <p className="text-gray-400">Connecting FCC students through safe, convenient ride sharing</p>
+          <p className="text-muted-foreground">Connecting FCC students through safe, convenient ride sharing</p>
         </div>
       </footer>
     </div>

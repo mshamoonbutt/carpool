@@ -1,7 +1,6 @@
 "use client"
 
-import React, { useEffect, Suspense } from 'react'
-import dynamic from 'next/dynamic'
+import React, { useEffect } from 'react'
 import { Inter } from 'next/font/google'
 import { AuthService } from '@/services/AuthService'
 import './globals.css'
@@ -19,8 +18,8 @@ export default function RootLayout({
       console.log('🚀 Initializing UniPool application...')
       
       try {
-        // Check API availability
-        const { checkApiHealth, apiConfig } = require('@/utils/apiConfig')
+        // Check API availability (dynamic import for client-side only)
+        const { checkApiHealth } = await import('@/utils/apiConfig')
         const isApiOnline = await checkApiHealth()
         console.log(`🌐 API is ${isApiOnline ? 'online' : 'offline'}. Using ${isApiOnline ? 'backend API' : 'localStorage'}.`)
         
