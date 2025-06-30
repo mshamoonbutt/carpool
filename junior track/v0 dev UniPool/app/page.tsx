@@ -224,7 +224,7 @@ export default function HomePage() {
       {/* Features (What Makes UniPool Different) */}
       <motion.section
         ref={featuresRef}
-        style={{ y: featuresY, scale: featuresScale, opacity: featuresOpacity, zIndex: 10, position: 'relative' }}
+        style={{ scale: featuresScale, opacity: featuresOpacity, zIndex: 10, position: 'relative' }}
         initial={{ opacity: 0, y: 60 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.3 }}
@@ -239,8 +239,8 @@ export default function HomePage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
             {featureHighlights.map((f, idx) => {
               // Per-card transforms based on scrollY
-              const cardY = useTransform(scrollY, [500, 800], [0, -120 - idx * 40])
-              const cardRotate = useTransform(scrollY, [500, 800], [0, idx % 2 === 0 ? -12 : 12])
+              const cardY = useTransform(scrollY, [500, 800], [0, -40])
+              const cardRotate = useTransform(scrollY, [500, 800], [0, idx % 2 === 0 ? -8 : 8])
               const cardOpacity = useTransform(scrollY, [500, 800], [1, 0])
               return (
                 <motion.div
@@ -277,7 +277,7 @@ export default function HomePage() {
         className="pt-2 pb-12 px-4"
       >
         <div className="container mx-auto">
-          <h2 className="text-3xl font-bold text-center text-foreground mb-4">How UniPool Works</h2>
+          <h2 className="text-4xl md:text-5xl font-extrabold text-center text-foreground mb-4 tracking-tight">How UniPool Works</h2>
           <p className="text-center text-muted-foreground mb-10">A quick guide to getting started</p>
           {/* Visual Tutorial */}
           <div className="flex flex-col md:flex-row justify-center items-center gap-8 mb-12">
