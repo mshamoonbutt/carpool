@@ -10,7 +10,7 @@
     }
   },
   "env": {
-    "NEXT_PUBLIC_API_URL": "carpoolx-production.up.railway.app:8000"
+    "NEXT_PUBLIC_API_URL": "https://carpoolx-production.up.railway.app:8000"
   },
   "headers": [
     {
