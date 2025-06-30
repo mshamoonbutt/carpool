@@ -84,7 +84,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">Welcome Back to UniPool</CardTitle>
@@ -140,9 +140,9 @@ export default function LoginPage() {
                     aria-label={showPassword ? "Hide password" : "Show password"}
                   >
                     {showPassword ? (
-                      <EyeOff className="h-4 w-4 text-gray-500" />
+                      <EyeOff className="h-4 w-4 text-muted-foreground" />
                     ) : (
-                      <Eye className="h-4 w-4 text-gray-500" />
+                      <Eye className="h-4 w-4 text-muted-foreground" />
                     )}
                   </button>
                 </div>
@@ -161,7 +161,7 @@ export default function LoginPage() {
               )}
               
               {/* Email Domain Help Text */}
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-muted-foreground">
                 Use @formanite.fccollege.edu.pk for students or @fccollege.edu.pk for faculty/staff
               </p>
             </div>
@@ -185,7 +185,7 @@ export default function LoginPage() {
             {/* Submit Button */}
             <Button
               type="submit"
-              className="w-full"
+              className="w-full btn-fun"
               disabled={loading || !emailValidation?.isValid}
             >
               {loading ? "Signing In..." : "Sign In"}
@@ -194,8 +194,8 @@ export default function LoginPage() {
 
           {/* Switch to Register */}
           <div className="mt-6 text-center text-sm">
-            <span className="text-gray-600">Don&apos;t have an account? </span>
-            <Link href="/auth/register" className="font-medium text-black hover:underline">
+            <span className="text-muted-foreground">Don&apos;t have an account? </span>
+            <Link href="/auth/register" className="font-medium text-foreground hover:underline">
               Create one here
             </Link>
           </div>

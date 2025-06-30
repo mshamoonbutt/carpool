@@ -24,8 +24,8 @@ const ApiHealthIndicator = dynamic(() => import("@/components/ApiHealthIndicator
 const MapboxMap = dynamic(() => import("@/components/map/MapboxMap"), {
   ssr: false,
   loading: () => (
-    <div className="h-full flex items-center justify-center bg-gray-100 rounded-lg">
-      <div className="text-gray-600">Loading map...</div>
+    <div className="h-full flex items-center justify-center bg-muted rounded-lg">
+      <div className="text-muted-foreground">Loading map...</div>
     </div>
   )
 });
@@ -146,13 +146,13 @@ export default function DashboardPage() {
   if (!user) return null
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200">
+      <header className="bg-card border-b border-border">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center space-x-2">
-            <Car className="h-8 w-8 text-black" />
-            <span className="text-2xl font-bold text-black">UniPool</span>
+            <Car className="h-8 w-8 text-foreground" />
+            <span className="text-2xl font-bold text-foreground">UniPool</span>
           </div>
           <div className="flex items-center space-x-4">
             {/* API Status Indicator */}
@@ -161,12 +161,12 @@ export default function DashboardPage() {
             </div>
             
             <div className="flex items-center space-x-2">
-              <UserIcon className="h-5 w-5 text-gray-600" />
-              <span className="text-sm font-medium">{user.name}</span>
+              <UserIcon className="h-5 w-5 text-muted-foreground" />
+              <span className="text-sm font-medium text-foreground">{user.name}</span>
               {user.rating && user.rideCount >= 3 && (
                 <div className="flex items-center space-x-1">
                   <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                  <span className="text-sm">{user.rating.toFixed(1)}</span>
+                  <span className="text-sm text-foreground">{user.rating.toFixed(1)}</span>
                 </div>
               )}
             </div>
@@ -199,10 +199,10 @@ export default function DashboardPage() {
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center space-x-2">
-                <Car className="h-8 w-8 text-black" />
+                <Car className="h-8 w-8 text-foreground" />
                 <div>
                   <p className="text-2xl font-bold">{myRides.length}</p>
-                  <p className="text-sm text-gray-600">My Rides</p>
+                  <p className="text-sm text-muted-foreground">My Rides</p>
                 </div>
               </div>
             </CardContent>
@@ -211,10 +211,10 @@ export default function DashboardPage() {
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center space-x-2">
-                <Users className="h-8 w-8 text-black" />
+                <Users className="h-8 w-8 text-foreground" />
                 <div>
                   <p className="text-2xl font-bold">{myBookings.length}</p>
-                  <p className="text-sm text-gray-600">My Bookings</p>
+                  <p className="text-sm text-muted-foreground">My Bookings</p>
                 </div>
               </div>
             </CardContent>
@@ -223,12 +223,12 @@ export default function DashboardPage() {
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center space-x-2">
-                <Star className="h-8 w-8 text-black" />
+                <Star className="h-8 w-8 text-foreground" />
                 <div>
                   <p className="text-2xl font-bold">
                     {user.rating && user.rideCount >= 3 ? user.rating.toFixed(1) : "N/A"}
                   </p>
-                  <p className="text-sm text-gray-600">Rating</p>
+                  <p className="text-sm text-muted-foreground">Rating</p>
                 </div>
               </div>
             </CardContent>
@@ -237,10 +237,10 @@ export default function DashboardPage() {
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center space-x-2">
-                <MapPin className="h-8 w-8 text-black" />
+                <MapPin className="h-8 w-8 text-foreground" />
                 <div>
                   <p className="text-2xl font-bold">{availableRides.length}</p>
-                  <p className="text-sm text-gray-600">Nearby Rides</p>
+                  <p className="text-sm text-muted-foreground">Available Rides</p>
                 </div>
               </div>
             </CardContent>

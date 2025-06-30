@@ -28,16 +28,16 @@ h1, h2, h3, h4, h5, h6 {
     -webkit-text-fill-color: transparent;
   }
   .card-fun {
-    background: #F4F4F4;
-    box-shadow: 0 8px 32px 0 rgba(166, 108, 255, 0.08);
+    background: #1a1f3a;
+    box-shadow: 0 8px 32px 0 rgba(63, 43, 150, 0.15);
     border-radius: 1.25rem;
-    border: 1.5px solid #D1D1D1;
+    border: 1.5px solid #3F2B96;
     transition: box-shadow 0.3s, transform 0.3s, border-color 0.3s;
   }
   .card-fun:hover {
-    box-shadow: 0 16px 40px 0 rgba(139, 46, 46, 0.16);
+    box-shadow: 0 16px 40px 0 rgba(168, 192, 255, 0.25);
     transform: translateY(-4px) scale(1.02);
-    border-color: #A66CFF;
+    border-color: #A8C0FF;
   }
   .btn-fun {
     background: linear-gradient(90deg, #3F2B96 0%, #A8C0FF 100%);
@@ -78,9 +78,9 @@ h1, h2, h3, h4, h5, h6 {
     color-scheme: dark;
     --background: #0D0D0D;
     --foreground: #FFFFFF;
-    --card: #272727;
+    --card: #1a1f3a;
     --card-foreground: #FFFFFF;
-    --popover: #272727;
+    --popover: #1a1f3a;
     --popover-foreground: #FFFFFF;
     --primary: #FFFFFF;
     --primary-foreground: #0D0D0D;

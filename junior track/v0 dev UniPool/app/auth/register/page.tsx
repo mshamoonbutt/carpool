@@ -157,7 +157,7 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">Create Your UniPool Account</CardTitle>
@@ -208,7 +208,7 @@ export default function RegisterPage() {
               )}
               
               {/* Email Domain Help Text */}
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-muted-foreground">
                 Use @formanite.fccollege.edu.pk for students or @fccollege.edu.pk for faculty/staff
               </p>
             </div>
@@ -292,13 +292,13 @@ export default function RegisterPage() {
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? (
-                    <EyeOff className="h-4 w-4 text-gray-500" />
+                    <EyeOff className="h-4 w-4 text-muted-foreground" />
                   ) : (
-                    <Eye className="h-4 w-4 text-gray-500" />
+                    <Eye className="h-4 w-4 text-muted-foreground" />
                   )}
                 </button>
               </div>
-              <p className="text-xs text-gray-500">Password must be at least 6 characters</p>
+              <p className="text-xs text-muted-foreground">Password must be at least 6 characters</p>
             </div>
             
             {/* Confirm Password Field */}
@@ -321,9 +321,9 @@ export default function RegisterPage() {
                   aria-label={showConfirmPassword ? "Hide password" : "Show password"}
                 >
                   {showConfirmPassword ? (
-                    <EyeOff className="h-4 w-4 text-gray-500" />
+                    <EyeOff className="h-4 w-4 text-muted-foreground" />
                   ) : (
-                    <Eye className="h-4 w-4 text-gray-500" />
+                    <Eye className="h-4 w-4 text-muted-foreground" />
                   )}
                 </button>
               </div>
@@ -348,7 +348,7 @@ export default function RegisterPage() {
             {/* Submit Button */}
             <Button
               type="submit"
-              className="w-full"
+              className="w-full btn-fun"
               disabled={loading || !emailValidation?.isValid}
             >
               {loading ? "Creating Account..." : "Create Account"}
@@ -357,8 +357,8 @@ export default function RegisterPage() {
 
           {/* Switch to Login */}
           <div className="mt-6 text-center text-sm">
-            <span className="text-gray-600">Already have an account? </span>
-            <Link href="/auth/login" className="font-medium text-black hover:underline">
+            <span className="text-muted-foreground">Already have an account? </span>
+            <Link href="/auth/login" className="font-medium text-foreground hover:underline">
               Sign in here
             </Link>
           </div>

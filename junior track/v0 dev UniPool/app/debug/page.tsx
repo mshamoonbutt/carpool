@@ -41,7 +41,7 @@ export default function DebugPage() {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
-      <h1 className="text-3xl font-bold">UniPool Debug Dashboard</h1>
+      <h1 className="text-3xl font-bold text-foreground">UniPool Debug Dashboard</h1>
       
       {/* Database Stats */}
       <Card>
@@ -51,16 +51,16 @@ export default function DebugPage() {
         <CardContent>
           <div className="grid grid-cols-3 gap-4">
             <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">{stats.users}</div>
-              <div className="text-sm text-gray-600">Users</div>
+              <div className="text-2xl font-bold text-accent">{stats.users}</div>
+              <div className="text-sm text-muted-foreground">Users</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">{stats.rides}</div>
-              <div className="text-sm text-gray-600">Rides</div>
+              <div className="text-2xl font-bold text-primary">{stats.rides}</div>
+              <div className="text-sm text-muted-foreground">Rides</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-purple-600">{stats.bookings}</div>
-              <div className="text-sm text-gray-600">Bookings</div>
+              <div className="text-2xl font-bold text-accent">{stats.bookings}</div>
+              <div className="text-sm text-muted-foreground">Bookings</div>
             </div>
           </div>
         </CardContent>
@@ -86,7 +86,7 @@ export default function DebugPage() {
               )}
             </div>
           ) : (
-            <p className="text-gray-500">No user currently logged in</p>
+            <p className="text-muted-foreground">No user currently logged in</p>
           )}
         </CardContent>
       </Card>
@@ -117,7 +117,7 @@ export default function DebugPage() {
           <CardTitle>Raw Data (First 5 Users)</CardTitle>
         </CardHeader>
         <CardContent>
-          <pre className="bg-gray-100 p-4 rounded text-xs overflow-auto max-h-96">
+          <pre className="bg-muted p-4 rounded text-xs overflow-auto max-h-96 text-foreground">
             {JSON.stringify(
               {
                 users: allData.users?.slice(0, 5) || [],

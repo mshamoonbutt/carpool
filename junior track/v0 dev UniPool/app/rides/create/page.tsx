@@ -133,16 +133,16 @@ export default function CreateRidePage() {
   if (!user) return null
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200">
+      <header className="bg-card border-b border-border">
         <div className="container mx-auto px-4 py-4 flex items-center space-x-4">
           <Button variant="ghost" onClick={() => router.push("/dashboard")}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div className="flex items-center space-x-2">
-            <Car className="h-6 w-6 text-black" />
-            <span className="text-xl font-bold text-black">Post a Ride</span>
+            <Car className="h-6 w-6 text-foreground" />
+            <span className="text-xl font-bold text-foreground">Post a Ride</span>
           </div>
         </div>
       </header>
@@ -164,7 +164,7 @@ export default function CreateRidePage() {
               {/* Pickup Location */}
               <div className="space-y-4">
                 <div className="flex items-center space-x-2 mb-2">
-                  <MapPin className="h-5 w-5 text-gray-600" />
+                  <MapPin className="h-5 w-5 text-muted-foreground" />
                   <Label className="text-base font-medium">Pickup Location</Label>
                 </div>
 

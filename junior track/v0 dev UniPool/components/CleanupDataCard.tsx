@@ -69,7 +69,7 @@ export default function CleanupDataCard({ onCleanup, className = '' }: CleanupDa
   };
 
   return (
-    <Card className={`bg-gray-50 ${className}`}>
+    <Card className={`bg-card ${className}`}>
       <CardContent className="p-4 space-y-4">
         <h3 className="font-medium">Data Management Tools</h3>
         

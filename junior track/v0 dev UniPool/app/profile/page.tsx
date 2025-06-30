@@ -90,16 +90,16 @@ export default function ProfilePage() {
   if (!user) return null
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200">
+      <header className="bg-card border-b border-border">
         <div className="container mx-auto px-4 py-4 flex items-center space-x-4">
           <Button variant="ghost" onClick={() => router.push("/dashboard")}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div className="flex items-center space-x-2">
-            <User className="h-6 w-6 text-black" />
-            <span className="text-xl font-bold text-black">My Profile</span>
+            <User className="h-6 w-6 text-foreground" />
+            <span className="text-xl font-bold text-foreground">My Profile</span>
           </div>
         </div>
       </header>
