@@ -1,19 +1,51 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Car, Users, Star, MapPin } from "lucide-react"
 import { AuthService } from "@/services/AuthService"
+import { motion, useScroll, useTransform } from "framer-motion"
+
+const heroCards = [
+  {
+    icon: <Users className="h-12 w-12 text-[#A66CFF] mb-4" />,
+    title: "Student Community",
+    desc: "Connect with verified FCC students and faculty. Build trust through our rating system."
+  },
+  {
+    icon: <MapPin className="h-12 w-12 text-[#8B2E2E] mb-4" />,
+    title: "Smart Matching",
+    desc: "AI-powered route matching finds the best rides based on your schedule and location."
+  },
+  {
+    icon: <Star className="h-12 w-12 text-[#FFD54F] mb-4" />,
+    title: "Safety First",
+    desc: "Verified university emails, mutual ratings, and community guidelines ensure safe rides."
+  }
+]
 
 export default function HomePage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [activeCard, setActiveCard] = useState(0)
   const router = useRouter()
+  const heroRef = useRef<HTMLDivElement>(null)
+  const featuresRef = useRef<HTMLDivElement>(null)
+  const { scrollY } = useScroll()
+  const heroScale = useTransform(scrollY, [0, 300], [1, 0.92])
+  const heroOpacity = useTransform(scrollY, [0, 300], [1, 0.7])
 
   useEffect(() => {
     const user = AuthService.getCurrentUser()
     setIsLoggedIn(!!user)
+  }, [])
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveCard((prev) => (prev + 1) % heroCards.length)
+    }, 5000)
+    return () => clearInterval(interval)
   }, [])
 
   const handleGetStarted = () => {
@@ -53,62 +85,58 @@ export default function HomePage() {
       </header>
 
       {/* Hero Section */}
-      <section className="py-20 px-4">
-        <div className="container mx-auto text-center">
-          <h1 className="text-5xl font-bold text-black mb-6">Campus Ride Sharing Made Simple</h1>
-          <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-            Connect with fellow students for safe, convenient rides to and from Forman Christian College. Share costs,
-            reduce traffic, and build community.
-          </p>
-          <Button onClick={handleGetStarted} size="lg" className="bg-black text-white hover:bg-gray-800">
-            Get Started
-          </Button>
-        </div>
-      </section>
-
-      {/* Features */}
-      <section className="py-16 px-4 bg-gray-50">
-        <div className="container mx-auto">
-          <h2 className="text-3xl font-bold text-center text-black mb-12">Why Choose UniPool?</h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            <Card className="border-gray-200">
-              <CardHeader>
-                <Users className="h-12 w-12 text-black mb-4" />
-                <CardTitle>Student Community</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <CardDescription>
-                  Connect with verified FCC students and faculty. Build trust through our rating system.
-                </CardDescription>
-              </CardContent>
-            </Card>
-
-            <Card className="border-gray-200">
-              <CardHeader>
-                <MapPin className="h-12 w-12 text-black mb-4" />
-                <CardTitle>Smart Matching</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <CardDescription>
-                  AI-powered route matching finds the best rides based on your schedule and location.
-                </CardDescription>
-              </CardContent>
-            </Card>
-
-            <Card className="border-gray-200">
-              <CardHeader>
-                <Star className="h-12 w-12 text-black mb-4" />
-                <CardTitle>Safety First</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <CardDescription>
-                  Verified university emails, mutual ratings, and community guidelines ensure safe rides.
-                </CardDescription>
-              </CardContent>
-            </Card>
+      <motion.section
+        ref={heroRef}
+        style={{ scale: heroScale, opacity: heroOpacity }}
+        className="py-20 px-4 bg-gradient-to-br from-[#fff] via-[#f4f4f4] to-[#eae2ff] will-change-transform"
+      >
+        <div className="container mx-auto flex flex-col md:flex-row items-center justify-between gap-10">
+          <div className="flex-1 text-center md:text-left">
+            <h1 className="text-5xl md:text-6xl font-extrabold fun-gradient mb-6 drop-shadow-lg leading-tight" style={{ fontWeight: 900, letterSpacing: '-0.02em' }}>
+              Join the Pool, Skip the Fuel.
+            </h1>
+            <p className="text-xl md:text-2xl text-gray-700 mb-8 max-w-xl mx-auto md:mx-0">
+              Save fuel. Save money. Save that one guy always asking for a ride.
+            </p>
+            <Button onClick={handleGetStarted} size="lg" className="btn-fun px-10 py-5 text-lg shadow-xl">
+              Get Started
+            </Button>
+          </div>
+          <div className="flex-1 flex justify-center md:justify-end">
+            {/* Illustration Placeholder - replace with SVG or image as needed */}
+            <div className="w-[320px] h-[320px] bg-gradient-to-br from-[#A66CFF]/30 to-[#8B2E2E]/20 rounded-3xl flex items-center justify-center shadow-2xl border-2 border-[#A66CFF]">
+              <Car className="h-40 w-40 text-[#A66CFF] opacity-80" />
+            </div>
           </div>
         </div>
-      </section>
+      </motion.section>
+
+      {/* Features */}
+      <motion.section
+        ref={featuresRef}
+        initial={{ opacity: 0, y: 60 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.3 }}
+        transition={{ duration: 0.7, ease: 'easeOut' }}
+        className="py-16 px-4 bg-gradient-to-r from-yellow-50 via-blue-50 to-pink-50 animate-fade-in will-change-transform"
+      >
+        <div className="container mx-auto">
+          <h2 className="text-3xl font-bold text-center fun-gradient mb-12 animate-fade-in">Why Choose UniPool?</h2>
+          <div className="flex flex-col md:flex-row gap-8 justify-center items-stretch">
+            {heroCards.map((card) => (
+              <Card key={card.title} className="flex-1 card-fun p-8 rounded-3xl shadow-2xl border-2 border-[#A66CFF] bg-gradient-to-br from-[#fff] via-[#f4f4f4] to-[#eae2ff] hover:shadow-purple-200 flex flex-col items-center">
+                <CardHeader className="flex flex-col items-center gap-2 p-0 mb-2">
+                  <div className="mb-2">{card.icon}</div>
+                  <CardTitle className="fun-gradient text-2xl font-extrabold drop-shadow-md mb-1 text-center">{card.title}</CardTitle>
+                </CardHeader>
+                <CardContent className="flex flex-col items-center p-0">
+                  <CardDescription className="text-base text-[#8B2E2E] font-semibold text-center max-w-xs">{card.desc}</CardDescription>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </motion.section>
 
       {/* How It Works */}
       <section className="py-16 px-4">
