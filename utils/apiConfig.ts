@@ -30,9 +30,9 @@ interface ApiConfig {
 // Function to check if the API is available
 let _isApiOnline = false;
 
-  // Create and export the config object
-  export const apiConfig: ApiConfig = {
-    baseUrl: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000",
+// Create and export the config object
+export const apiConfig: ApiConfig = {
+  baseUrl: "http://localhost:8000",
   endpoints: {
     auth: {
       login: "/api/users/login",
