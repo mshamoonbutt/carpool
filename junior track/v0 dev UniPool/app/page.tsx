@@ -31,25 +31,25 @@ const heroCards = [
   }
 ]
 
-// Feature highlights for new grid
+// Feature highlights for new grid with image icons
 const featureHighlights = [
   {
-    icon: "🚗",
+    icon: "/partners.png",
     title: "Verified Student Rides",
     desc: "Only real students, always safe."
   },
   {
-    icon: "📍",
+    icon: "/location.png",
     title: "Campus-Based Pickup Points",
     desc: "Meet and ride from trusted locations."
   },
   {
-    icon: "🔐",
+    icon: "/shield.png",
     title: "Safe & Profile-Linked",
     desc: "Every ride is linked to a real profile."
   },
   {
-    icon: "💬",
+    icon: "/chat.png",
     title: "In-App Messaging",
     desc: "Chat securely with your carpool."
   }
@@ -205,7 +205,7 @@ export default function HomePage() {
         <div className="container mx-auto max-w-5xl">
           <div className="mb-8 text-left">
             <h2 className="text-4xl md:text-5xl font-extrabold text-foreground mb-2 tracking-tight">What Makes UniPool Different?</h2>
-            <p className="text-lg text-muted-foreground font-medium max-w-2xl">We're not Careem. We're campus-powered.</p>
+            <p className="text-lg text-muted-foreground font-medium max-w-2xl italic">We're not Careem. We're campus-powered.</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
             {featureHighlights.map((f, idx) => {
@@ -219,13 +219,21 @@ export default function HomePage() {
                   style={{ y: cardY, rotate: cardRotate, opacity: cardOpacity, zIndex: 20 - idx }}
                   whileHover={{ y: -8, scale: 1.04, boxShadow: "0 8px 32px 0 rgba(63,43,150,0.15)" }}
                   transition={{ type: "spring", stiffness: 300, damping: 22 }}
-                  className="bg-card rounded-2xl p-8 flex flex-col items-start shadow-lg border border-border hover:border-accent transition-all duration-200 group"
+                  className="bg-card rounded-2xl p-8 flex flex-col items-start shadow-lg border-2 border-transparent group-hover:border-accent transition-all duration-200 group relative overflow-hidden"
                 >
-                  <div className="mb-6 flex items-center justify-center w-16 h-16 rounded-xl bg-gradient-to-br from-accent/10 to-muted/40 text-4xl md:text-5xl drop-shadow-lg">
-                    {f.icon}
+                  <div className="absolute inset-0 rounded-2xl pointer-events-none z-0 border-2 border-transparent group-hover:border-accent" style={{
+                    background: 'linear-gradient(90deg, #3F2B96 0%, #A8C0FF 100%)',
+                    WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+                    WebkitMaskComposite: 'xor',
+                    maskComposite: 'exclude',
+                    borderRadius: '1rem',
+                    zIndex: 1
+                  }} />
+                  <div className="mb-6 flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-accent/20 to-muted/50 drop-shadow-2xl shadow-lg transition-transform duration-300 group-hover:scale-105 group-hover:rotate-2 z-10">
+                    <Image src={f.icon} alt={f.title + ' icon'} width={64} height={64} className="object-contain drop-shadow-[0_6px_18px_rgba(63,43,150,0.25)]" />
                   </div>
-                  <div className="font-bold text-xl md:text-2xl text-foreground mb-2 tracking-tight">{f.title}</div>
-                  <div className="text-base text-muted-foreground font-medium leading-snug">{f.desc}</div>
+                  <div className="font-bold text-xl md:text-2xl text-foreground mb-2 tracking-tight z-10">{f.title}</div>
+                  <div className="text-base text-muted-foreground font-medium leading-snug z-10">{f.desc}</div>
                 </motion.div>
               )
             })}
