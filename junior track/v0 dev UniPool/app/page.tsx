@@ -7,6 +7,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Car, Users, Star, MapPin } from "lucide-react"
 import { AuthService } from "@/services/AuthService"
 import { motion, useScroll, useTransform } from "framer-motion"
+import crestImg from "@/public/crest.png"
+import phoneCarImg from "@/public/phone-car.png"
+import carpoolGridImg from "@/public/carpool-grid.png"
+import Image from "next/image"
+import { useMotionValue, useSpring } from "framer-motion"
 
 const heroCards = [
   {
@@ -26,15 +31,58 @@ const heroCards = [
   }
 ]
 
+// Feature highlights for new grid
+const featureHighlights = [
+  {
+    icon: "🚗",
+    title: "Verified Student Rides",
+    desc: "Only real students, always safe."
+  },
+  {
+    icon: "📍",
+    title: "Campus-Based Pickup Points",
+    desc: "Meet and ride from trusted locations."
+  },
+  {
+    icon: "🔐",
+    title: "Safe & Profile-Linked",
+    desc: "Every ride is linked to a real profile."
+  },
+  {
+    icon: "💬",
+    title: "In-App Messaging",
+    desc: "Chat securely with your carpool."
+  }
+]
+
 export default function HomePage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [activeCard, setActiveCard] = useState(0)
   const router = useRouter()
   const heroRef = useRef<HTMLDivElement>(null)
   const featuresRef = useRef<HTMLDivElement>(null)
+  const howItWorksRef = useRef<HTMLDivElement>(null)
   const { scrollY } = useScroll()
-  const heroScale = useTransform(scrollY, [0, 300], [1, 0.92])
-  const heroOpacity = useTransform(scrollY, [0, 300], [1, 0.7])
+
+  // Header parallax/3D effect
+  const headerScale = useTransform(scrollY, [0, 120], [1, 0.96])
+  const headerShadow = useTransform(scrollY, [0, 120], ["0 1px 0 0 rgba(0,0,0,0.05)", "0 8px 32px 0 rgba(63,43,150,0.18)"])
+
+  // Hero parallax: scale and fade out more dramatically
+  const heroScale = useTransform(scrollY, [0, 400], [1, 0.85])
+  const heroOpacity = useTransform(scrollY, [0, 400], [1, 0])
+
+  // Features section parallax: move up and forward as it comes in
+  const featuresY = useTransform(scrollY, [200, 600], [80, -120])
+  const featuresScale = useTransform(scrollY, [200, 600], [0.98, 1.04])
+  const featuresOpacity = useTransform(scrollY, [200, 600], [0.7, 1])
+
+  // How It Works parallax: slide in from below as features fade out
+  const howY = useTransform(scrollY, [600, 900], [120, 0])
+  const howOpacity = useTransform(scrollY, [600, 900], [0, 1])
+
+  // For card scatter/fly-away effect, use scrollY directly for each card
+  const featuresScatter = useTransform(scrollY, [500, 800], [0, 1])
 
   useEffect(() => {
     const user = AuthService.getCurrentUser()
@@ -59,12 +107,15 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b border-border">
-                  <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-            <div className="flex items-center space-x-2">
-              <Car className="h-8 w-8 text-foreground" />
-              <span className="text-2xl font-bold text-foreground">UniPool</span>
-            </div>
+      <motion.header
+        style={{ scale: headerScale, boxShadow: headerShadow, zIndex: 50, position: 'sticky', top: 0, background: 'var(--background)', transition: 'box-shadow 0.3s' }}
+        className="border-b border-border"
+      >
+        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+          <div className="flex items-center space-x-2">
+            <Car className="h-8 w-8 text-foreground" />
+            <span className="text-2xl font-bold text-foreground">UniPool</span>
+          </div>
           <div className="space-x-4">
             {isLoggedIn ? (
               <>
@@ -82,70 +133,118 @@ export default function HomePage() {
             )}
           </div>
         </div>
-      </header>
+      </motion.header>
 
       {/* Hero Section */}
       <motion.section
         ref={heroRef}
-        style={{ scale: heroScale, opacity: heroOpacity }}
-        className="py-20 px-4 bg-gradient-to-br from-background via-muted/50 to-accent/20 will-change-transform"
+        style={{ scale: heroScale, opacity: heroOpacity, background: 'var(--background)' }}
+        className="relative py-20 px-4 will-change-transform overflow-hidden"
       >
-        <div className="container mx-auto flex flex-col md:flex-row items-center justify-between gap-10">
-          <div className="flex-1 text-center md:text-left">
-            <h1 className="text-5xl md:text-6xl font-extrabold fun-gradient mb-6 drop-shadow-lg leading-tight" style={{ fontWeight: 900, letterSpacing: '-0.02em' }}>
-              Join the Pool, Skip the Fuel.
-            </h1>
-            <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-xl mx-auto md:mx-0">
-              Save fuel. Save money. Save that one guy always asking for a ride.
-            </p>
-            <Button onClick={handleGetStarted} size="lg" className="btn-fun px-10 py-5 text-lg shadow-xl">
-              Get Started
-            </Button>
-          </div>
-          <div className="flex-1 flex justify-center md:justify-end">
-            {/* Illustration Placeholder - replace with SVG or image as needed */}
-            <div className="w-[320px] h-[320px] bg-gradient-to-br from-accent/30 to-primary/20 rounded-3xl flex items-center justify-center shadow-2xl border-2 border-accent">
-              <Car className="h-40 w-40 text-accent opacity-80" />
+        {/* Symmetrical grid of images behind the headline */}
+        <motion.div
+          className="absolute inset-0 w-full h-full pointer-events-none z-0"
+          animate={{ x: [0, -80] }}
+          transition={{ repeat: Infinity, repeatType: 'loop', duration: 30, ease: 'linear' }}
+          style={{ willChange: 'transform' }}
+        >
+          <div className="w-full h-full flex items-center justify-center">
+            <div className="absolute inset-0 w-full h-full grid grid-cols-12 grid-rows-6 gap-8">
+              {Array.from({ length: 72 }).map((_, i) => {
+                const icons = [
+                  "/white crest.png",
+                  "/car.png",
+                  "/car-sharing.png"
+                ];
+                const row = Math.floor(i / 12);
+                const col = i % 12;
+                let iconIdx = (col + row) % 3;
+                return (
+                  <Image
+                    key={i}
+                    src={icons[iconIdx]}
+                    alt="Grid Icon"
+                    width={40}
+                    height={40}
+                    className="object-contain opacity-60"
+                    style={{
+                      opacity: (row === 2 && col === 6) ? 1 : 0.6
+                    }}
+                  />
+                );
+              })}
             </div>
           </div>
+          {/* Fade out edges with a mask */}
+          <div className="absolute inset-0 bg-gradient-to-b from-[var(--background)] via-transparent to-[var(--background)] pointer-events-none" style={{maskImage: 'radial-gradient(circle at center, white 60%, transparent 100%)', WebkitMaskImage: 'radial-gradient(circle at center, white 60%, transparent 100%)'}} />
+        </motion.div>
+        {/* Headline and subheadline centered */}
+        <div className="relative z-10 w-full flex flex-col items-center text-center">
+          <h1 className="text-5xl md:text-6xl font-extrabold fun-gradient mb-6 drop-shadow-lg leading-tight" style={{ fontWeight: 900, letterSpacing: '-0.02em' }}>
+            Join the Pool, Skip the Fuel.
+          </h1>
+          <p className="text-xl md:text-2xl text-gray-200 mb-8 max-w-xl mx-auto">
+            Save fuel. Save money. Save that one guy always asking for a ride.
+          </p>
+          <Button onClick={handleGetStarted} size="lg" className="btn-fun px-10 py-5 text-lg shadow-xl">
+            Get Started
+          </Button>
         </div>
       </motion.section>
 
-      {/* Features */}
+      {/* Features (What Makes UniPool Different) */}
       <motion.section
         ref={featuresRef}
+        style={{ y: featuresY, scale: featuresScale, opacity: featuresOpacity, zIndex: 10, position: 'relative' }}
         initial={{ opacity: 0, y: 60 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.3 }}
         transition={{ duration: 0.7, ease: 'easeOut' }}
-        className="py-16 px-4 bg-gradient-to-r from-background via-muted/30 to-accent/10 animate-fade-in will-change-transform"
+        className="py-12 px-4 bg-gradient-to-r from-background via-muted/30 to-accent/10"
       >
-        <div className="container mx-auto">
-          <h2 className="text-3xl font-bold text-center fun-gradient mb-12 animate-fade-in">Why Choose UniPool?</h2>
-          <div className="flex flex-col md:flex-row gap-8 justify-center items-stretch">
-            {heroCards.map((card) => (
-              <Card key={card.title} className="flex-1 card-fun p-8 rounded-3xl shadow-2xl border-2 border-accent bg-gradient-to-br from-card via-card/80 to-accent/10 hover:shadow-accent/20 flex flex-col items-center">
-                <CardHeader className="flex flex-col items-center gap-2 p-0 mb-2">
-                  <div className="mb-2">{card.icon}</div>
-                  <CardTitle className="fun-gradient text-2xl font-extrabold drop-shadow-md mb-1 text-center">{card.title}</CardTitle>
-                </CardHeader>
-                <CardContent className="flex flex-col items-center p-0">
-                  <CardDescription className="text-base text-muted-foreground font-semibold text-center max-w-xs">{card.desc}</CardDescription>
-                </CardContent>
-              </Card>
-            ))}
+        <div className="container mx-auto max-w-5xl">
+          <div className="mb-8 text-left">
+            <h2 className="text-4xl md:text-5xl font-extrabold text-foreground mb-2 tracking-tight">What Makes UniPool Different?</h2>
+            <p className="text-lg text-muted-foreground font-medium max-w-2xl">We're not Careem. We're campus-powered.</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+            {featureHighlights.map((f, idx) => {
+              // Per-card transforms based on scrollY
+              const cardY = useTransform(scrollY, [500, 800], [0, -120 - idx * 40])
+              const cardRotate = useTransform(scrollY, [500, 800], [0, idx % 2 === 0 ? -12 : 12])
+              const cardOpacity = useTransform(scrollY, [500, 800], [1, 0])
+              return (
+                <motion.div
+                  key={f.title}
+                  style={{ y: cardY, rotate: cardRotate, opacity: cardOpacity, zIndex: 20 - idx }}
+                  whileHover={{ y: -8, scale: 1.04, boxShadow: "0 8px 32px 0 rgba(63,43,150,0.15)" }}
+                  transition={{ type: "spring", stiffness: 300, damping: 22 }}
+                  className="bg-card rounded-2xl p-8 flex flex-col items-start shadow-lg border border-border hover:border-accent transition-all duration-200 group"
+                >
+                  <div className="mb-6 flex items-center justify-center w-16 h-16 rounded-xl bg-gradient-to-br from-accent/10 to-muted/40 text-4xl md:text-5xl drop-shadow-lg">
+                    {f.icon}
+                  </div>
+                  <div className="font-bold text-xl md:text-2xl text-foreground mb-2 tracking-tight">{f.title}</div>
+                  <div className="text-base text-muted-foreground font-medium leading-snug">{f.desc}</div>
+                </motion.div>
+              )
+            })}
           </div>
         </div>
       </motion.section>
 
       {/* How It Works */}
-      <section className="py-16 px-4">
+      <motion.section
+        ref={howItWorksRef}
+        style={{ y: howY, opacity: howOpacity, zIndex: 5, position: 'relative' }}
+        className="pt-4 pb-16 px-4"
+      >
         <div className="container mx-auto">
           <h2 className="text-3xl font-bold text-center text-foreground mb-12">How It Works</h2>
           <div className="grid md:grid-cols-2 gap-12">
-                          <div>
-                <h3 className="text-2xl font-bold text-foreground mb-4">For Drivers</h3>
-                <ul className="space-y-3 text-muted-foreground">
+            <div>
+              <h3 className="text-2xl font-bold text-foreground mb-4">For Drivers</h3>
+              <ul className="space-y-3 text-muted-foreground">
                 <li className="flex items-start">
                   <span className="bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center text-sm mr-3 mt-0.5">
                     1
@@ -203,7 +302,7 @@ export default function HomePage() {
             </div>
           </div>
         </div>
-      </section>
+      </motion.section>
 
       {/* Footer */}
       <footer className="bg-muted text-foreground py-8 px-4">
