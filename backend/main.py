@@ -1,3 +1,4 @@
+import os
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -9,12 +10,25 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Setup CORS to allow requests from the frontend
+# Get environment variables
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
+ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
+
+# Setup CORS for production and development
+if ENVIRONMENT == "production":
+    allowed_origins = [FRONTEND_URL]
+else:
+    allowed_origins = [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:3001",
+    ]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # Add your Next.js frontend URL here
+    allow_origins=allowed_origins,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 
@@ -25,7 +39,12 @@ app.include_router(bookings.router, prefix="/api/bookings", tags=["bookings"])
 
 @app.get("/")
 async def root():
-    return {"message": "Welcome to UniPool API"}
+    return {"message": "UniPool API is running!", "environment": ENVIRONMENT}
+
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy", "environment": ENVIRONMENT}
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    port = int(os.getenv("PORT", 8000))
+    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=ENVIRONMENT=="development")

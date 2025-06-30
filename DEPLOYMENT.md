@@ -76,11 +76,14 @@ railway run alembic upgrade head
    - Import your GitHub repository
    - Vercel will automatically detect it's a Next.js project
 
-2. **Configure Environment Variables**:
-   Add this environment variable in Vercel dashboard:
+2. **Configure Environment Variables** (IMPORTANT - Do this BEFORE deploying):
+   In your Vercel project dashboard, go to Settings → Environment Variables and add:
    ```
-   NEXT_PUBLIC_API_URL=https://your-backend.railway.app
+   Variable Name: NEXT_PUBLIC_API_URL
+   Value: https://your-backend.railway.app
+   Environment: Production, Preview, Development
    ```
+   ⚠️ **Note**: Replace `https://your-backend.railway.app` with your actual Railway backend URL from Step 1.
 
 3. **Deploy**:
    - Click "Deploy"
