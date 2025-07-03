@@ -1,0 +1,408 @@
+import type { Ride, CreateRideData } from "@/types";
+import { ApiRideService } from "./ApiRideService";
+import { apiConfig } from "@/utils/apiConfig";
+
+export class RideService {
+  // Check API availability on startup
+  static {
+    console.log("Initializing Ride Service - using backend API only");
+  }
+
+  static async createRide(data: CreateRideData): Promise<Ride> {
+    try {
+      console.log("Creating ride via API...");
+      // Create ride via API
+      const apiRideData: any = {
+        origin: data.pickupArea,
+        destination: data.destination,
+        departure_time: data.departureTime,
+        available_seats: data.totalSeats,
+        price: 0, // Default price
+        description: data.notes || data.route || "",
+      };
+
+      const apiRide = await ApiRideService.createRide(apiRideData);
+
+      // Convert API ride to local format
+      const ride: Ride = {
+        id: apiRide.id.toString(),
+        driverId: apiRide.driver_id.toString(),
+        driverName: apiRide.driver?.name || data.driverName, // Prefer API data if available
+        pickupArea: apiRide.origin,
+        destination: apiRide.destination,
+        departureTime: apiRide.departure_time,
+        totalSeats: apiRide.available_seats,
+        availableSeats: apiRide.available_seats,
+        route: data.route || "",
+        notes: apiRide.description,
+        status:
+          apiRide.status === "scheduled"
+            ? "active"
+            : apiRide.status === "completed"
+            ? "completed"
+            : ("cancelled" as "active" | "completed" | "cancelled"),
+        isRecurring: data.isRecurring || false,
+        recurringDays: data.recurringDays,
+        createdAt: apiRide.created_at,
+      };
+
+      console.log(`✅ Created ride via API with ID: ${ride.id}`);
+      return ride;
+    } catch (error: any) {
+      console.error(
+        "API createRide failed:",
+        error.response?.data?.detail || error.message,
+        "Status:",
+        error.response?.status
+      );
+      
+      throw new Error(
+        error.response?.data?.detail ||
+          "Failed to create ride. Make sure you're logged in with a valid token and have driver permissions."
+      );
+    }
+  }
+  }
+
+  static async getRides(filters: any = {}): Promise<Ride[]> {
+    try {
+      console.log("Fetching rides from API...");
+      // Get rides from API
+      let apiRides;
+
+      if (filters.pickupArea || filters.date) {
+        // Use search endpoint if filters are provided
+        apiRides = await ApiRideService.searchRides({
+          origin: filters.pickupArea,
+          min_date: filters.date,
+          max_date: filters.date,
+        });
+      } else {
+        // Otherwise get all rides
+        apiRides = await ApiRideService.getAllRides();
+      }
+
+      // Convert API rides to local format
+      const rides: Ride[] = apiRides.map((apiRide) => ({
+          id: apiRide.id.toString(),
+          driverId: apiRide.driver_id.toString(),
+          driverName: apiRide.driver.name,
+          pickupArea: apiRide.origin,
+          destination: apiRide.destination,
+          departureTime: apiRide.departure_time,
+          totalSeats: apiRide.available_seats + (filters.bookedSeats || 0),
+          availableSeats: apiRide.available_seats,
+          route: apiRide.description,
+          notes: apiRide.description,
+          status:
+            apiRide.status === "scheduled"
+              ? "active"
+              : apiRide.status === "completed"
+              ? "completed"
+              : "cancelled",
+          isRecurring: false, // API might not have this field
+          createdAt: apiRide.created_at,
+        }));
+
+        console.log(`✅ Fetched ${rides.length} rides from API`);
+        return rides;
+      } catch (error: any) {
+        console.error(
+          "API getRides failed:",
+          error.response?.data?.detail || error.message
+        );
+
+        // Fall back to localStorage only if specifically configured to do so
+        if (process.env.NEXT_PUBLIC_ALLOW_FALLBACK === "true") {
+          console.log("Using localStorage fallback for getRides");
+        } else {
+          return []; // Return empty array when API fails and fallback disabled
+        }
+      }
+    }
+
+    // If API is not available or failed, use localStorage
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        let rides = this.getAllRides();
+
+        // Filter active rides only
+        rides = rides.filter((ride) => ride.status === "active");
+
+        // Filter by date if provided
+        if (filters.date) {
+          const filterDate = new Date(filters.date).toDateString();
+          rides = rides.filter(
+            (ride) => new Date(ride.departureTime).toDateString() === filterDate
+          );
+        }
+
+        // Filter by pickup area if provided
+        if (filters.pickupArea) {
+          rides = rides.filter((ride) =>
+            ride.pickupArea
+              .toLowerCase()
+              .includes(filters.pickupArea.toLowerCase())
+          );
+        }
+
+        // Sort by departure time
+        rides.sort(
+          (a, b) =>
+            new Date(a.departureTime).getTime() -
+            new Date(b.departureTime).getTime()
+        );
+
+        console.log(`✅ Fetched ${rides.length} rides from localStorage`);
+        resolve(rides);
+      }, 100);
+    });
+  }
+
+  static async searchRides(filters: any): Promise<Ride[]> {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        let rides = this.getAllRides();
+
+        // Filter active rides with available seats
+        rides = rides.filter(
+          (ride) =>
+            ride.status === "active" &&
+            ride.availableSeats > 0 &&
+            new Date(ride.departureTime) > new Date()
+        );
+
+        // Filter by pickup area
+        if (filters.pickupArea) {
+          rides = rides.filter((ride) =>
+            ride.pickupArea
+              .toLowerCase()
+              .includes(filters.pickupArea.toLowerCase())
+          );
+        }
+
+        // Filter by destination
+        if (filters.destination) {
+          rides = rides.filter(
+            (ride) => ride.destination === filters.destination
+          );
+        }
+
+        // Filter by date
+        if (filters.date) {
+          const filterDate = new Date(filters.date).toDateString();
+          rides = rides.filter(
+            (ride) => new Date(ride.departureTime).toDateString() === filterDate
+          );
+        }
+
+        // Filter by time window
+        if (filters.timeWindow && filters.time) {
+          const targetTime = new Date(`${filters.date}T${filters.time}`);
+          const windowMinutes = Number.parseInt(filters.timeWindow);
+
+          rides = rides.filter((ride) => {
+            const rideTime = new Date(ride.departureTime);
+            const timeDiff =
+              Math.abs(rideTime.getTime() - targetTime.getTime()) / (1000 * 60);
+            return timeDiff <= windowMinutes;
+          });
+        }
+
+        // Sort by rating (high to low), then by time proximity
+        rides.sort((a, b) => {
+          const aRating = a.driverRating || 0;
+          const bRating = b.driverRating || 0;
+
+          if (aRating !== bRating) {
+            return bRating - aRating;
+          }
+
+          return (
+            new Date(a.departureTime).getTime() -
+            new Date(b.departureTime).getTime()
+          );
+        });
+
+        resolve(rides);
+      }, 100);
+    });
+  }
+
+  static async getUserRides(userId: string): Promise<Ride[]> {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const rides = this.getAllRides();
+        const userRides = rides.filter((ride) => ride.driverId === userId);
+        userRides.sort(
+          (a, b) =>
+            new Date(b.departureTime).getTime() -
+            new Date(a.departureTime).getTime()
+        );
+        resolve(userRides);
+      }, 100);
+    });
+  }
+
+  static async getAvailableRides(excludeUserId: string): Promise<Ride[]> {
+    try {
+      console.log("Fetching available rides from API...");
+      // Get all rides from API
+      const apiRides = await ApiRideService.getAllRides();
+
+      // Filter and convert API rides to local format
+      const availableRides = apiRides
+        .filter(
+          (apiRide) =>
+            apiRide.driver_id.toString() !== excludeUserId &&
+            apiRide.status === "scheduled" &&
+            apiRide.available_seats > 0 &&
+            new Date(apiRide.departure_time) > new Date()
+        )
+        .map((apiRide) => ({
+          id: apiRide.id.toString(),
+          driverId: apiRide.driver_id.toString(),
+          driverName: apiRide.driver?.name || "Unknown",
+          pickupArea: apiRide.origin,
+          destination: apiRide.destination,
+          departureTime: apiRide.departure_time,
+          totalSeats: apiRide.available_seats, // Assuming this is total available seats
+          availableSeats: apiRide.available_seats,
+          route: apiRide.description || "",
+          notes: apiRide.description || "",
+          status:
+            apiRide.status === "scheduled"
+              ? "active"
+              : ((apiRide.status === "completed"
+                  ? "completed"
+                  : "cancelled") as "active" | "completed" | "cancelled"),
+          isRecurring: false,
+          createdAt: apiRide.created_at,
+        }));
+
+      // Sort by departure time
+      availableRides.sort(
+        (a, b) =>
+          new Date(a.departureTime).getTime() -
+          new Date(b.departureTime).getTime()
+      );
+
+      console.log(
+        `✅ Fetched ${availableRides.length} available rides from API`
+      );
+      return availableRides;
+    } catch (error) {
+      console.error("Failed to fetch available rides from API:", error);
+      throw new Error(
+        "Failed to load available rides. Please try again later."
+      );
+    }
+  }
+
+  static async getRideById(rideId: string): Promise<Ride | null> {
+    const isApiOnline = await checkApiHealth();
+
+    if (isApiOnline) {
+      try {
+        console.log(`Fetching ride ${rideId} from API...`);
+        // Try to get ride from API
+        const apiRide = await ApiRideService.getRideById(parseInt(rideId));
+
+        if (!apiRide) return null;
+
+        // Convert API ride to local format
+        const ride: Ride = {
+          id: apiRide.id.toString(),
+          driverId: apiRide.driver_id.toString(),
+          driverName: apiRide.driver.name,
+          pickupArea: apiRide.origin,
+          destination: apiRide.destination,
+          departureTime: apiRide.departure_time,
+          totalSeats: apiRide.available_seats, // This is not accurate but will work for display
+          availableSeats: apiRide.available_seats,
+          route: apiRide.description,
+          notes: apiRide.description,
+          status:
+            apiRide.status === "active"
+              ? "active"
+              : apiRide.status === "completed"
+              ? "completed"
+              : ("cancelled" as any),
+          isRecurring: false, // API might not have this field
+          createdAt: apiRide.created_at,
+        };
+
+        console.log(`✅ Fetched ride ${rideId} from API`);
+        return ride;
+      } catch (error) {
+        console.warn(
+          `API getRideById failed for ${rideId}, falling back to localStorage:`,
+          error
+        );
+        // Fall back to localStorage
+      }
+    }
+
+    // If API is not available or failed, use localStorage
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const rides = this.getAllRides();
+        const ride = rides.find((r) => r.id === rideId);
+        console.log(
+          `${
+            ride ? "✅ Found" : "❌ Could not find"
+          } ride ${rideId} in localStorage`
+        );
+        resolve(ride || null);
+      }, 100);
+    });
+  }
+
+  static async updateRide(
+    rideId: string,
+    updates: Partial<Ride>
+  ): Promise<Ride | null> {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const rides = this.getAllRides();
+        const index = rides.findIndex((r) => r.id === rideId);
+
+        if (index !== -1) {
+          rides[index] = { ...rides[index], ...updates };
+          localStorage.setItem(this.STORAGE_KEY, JSON.stringify(rides));
+          resolve(rides[index]);
+        } else {
+          resolve(null);
+        }
+      }, 100);
+    });
+  }
+
+  static async cancelRide(rideId: string): Promise<boolean> {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const rides = this.getAllRides();
+        const index = rides.findIndex((r) => r.id === rideId);
+
+        if (index !== -1) {
+          rides[index].status = "cancelled";
+          localStorage.setItem(this.STORAGE_KEY, JSON.stringify(rides));
+          resolve(true);
+        } else {
+          resolve(false);
+        }
+      }, 100);
+    });
+  }
+
+  // Removed cleanupStaleRides method - no longer needed as we're using the backend API
+
+  private static getAllRides(): Ride[] {
+    try {
+      const ridesData = localStorage.getItem(this.STORAGE_KEY);
+      return ridesData ? JSON.parse(ridesData) : [];
+    } catch {
+      return [];
+    }
+  }
+}
